@@ -91,3 +91,50 @@ Containers have networking disabled, a non-root user, no capabilities, no privil
 Docker is not an absolute security boundary. Use a dedicated machine or stronger isolation for hostile workloads. The image tag is mutable; record/pin an image digest for controlled experiments. Per-test timeout includes container start/attach overhead. Python allocation failure can appear as a runtime error when the kernel does not report an OOM kill. Cleanup can fail if Docker itself becomes unavailable; inspect containers with the `branchforge-` name prefix after daemon recovery.
 
 Future milestones: reliable provider-specific token/cost admission, stronger sandbox backends, larger held-out benchmarks, and checkpoint resume. No web UI, distributed workers, training, or parallel MCTS is included.
+
+## Search execution dashboard
+
+The local, read-only dashboard loads `runs/` automatically. It provides candidate trees,
+code inspection and parent diffs, deterministic event replay, worker activity and analytics.
+New runs record schema-v2 events; old runs retain their final tree and recorded task timelines,
+but detailed replay controls are disabled rather than inventing intermediate states.
+
+```sh
+uv sync --locked
+uv run uvicorn branchforge.api.app:app --host 127.0.0.1 --port 8000
+# In another terminal (Node 24+):
+cd dashboard
+npm ci
+npm run dev
+```
+
+Open the URL printed by Vite. Bookmark `/runs/{run_id}` to return to a run. Set
+`BRANCHFORGE_RUNS_DIR` on the API process to read a different artifact directory.
+The frontend proxies `/api` locally; no credentials or cloud services are needed.
+
+Generate actual search artifacts with the existing fake provider (Docker required):
+
+```sh
+uv run branchforge solve --problem examples/problems/max_subarray.yaml --algorithm beam --parallel-agents 4
+```
+
+Or generate clearly labeled synthetic test data without Docker or an API key:
+
+```sh
+uv run python scripts/dashboard_fixture.py
+```
+
+This creates `runs/synthetic-dashboard` with 500 candidate nodes plus the root,
+5,000 events and eight simulated workers. It overwrites only this named fixture.
+It is test data, not evidence of algorithm quality.
+
+```sh
+uv run pytest -q
+cd dashboard
+npm test
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+See [dashboard event compatibility](docs/dashboard.md) for recording semantics and limitations.

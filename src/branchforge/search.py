@@ -223,7 +223,12 @@ class SearchOrchestrator:
                     max_wall_time_seconds=self.config.agents.max_wall_time_seconds,
                 )
                 tasks.append(task)
-                self.events.emit("BRANCH_TASK_CREATED", task_id=task_id, node_id=parent_id)
+                self.events.emit(
+                    "BRANCH_TASK_CREATED",
+                    task_id=task_id,
+                    node_id=parent_id,
+                    frontier_index=self.frontier_index,
+                )
                 self.events.emit("NODE_EXPANSION_STARTED", node_id=parent_id, task_id=task_id)
         created = []
         try:
@@ -255,6 +260,7 @@ class SearchOrchestrator:
                                 node_id=node.node_id,
                                 task_id=task.task_id,
                                 order=node.order,
+                                node=node.model_dump(mode="json"),
                             )
                 finally:
                     self.budget.release(task)
@@ -270,7 +276,11 @@ class SearchOrchestrator:
     async def run(self) -> dict[str, Any]:
         self.events.save("config.json", self.config.model_dump(mode="json"))
         self.events.save("problem.json", self.problem.model_dump(mode="json"))
-        self.events.emit("RUN_STARTED", algorithm=self.algorithm)
+        self.events.emit(
+            "RUN_STARTED",
+            algorithm=self.algorithm,
+            root=self.tree.nodes["root"].model_dump(mode="json"),
+        )
         reason = "ERROR"
         try:
             async with asyncio.timeout(self.config.budget.max_wall_time_seconds):
@@ -316,6 +326,7 @@ class SearchOrchestrator:
                 "average_depth": sum(n.depth for n in self.tree.nodes.values())
                 / len(self.tree.nodes),
             }
+            self.events.emit("FINAL_SELECTED", node_id=final.node_id if final else None)
             self.events.emit("RUN_FINISHED", termination_reason=reason, error=self.error)
             self.snapshot()
             self.events.save("result.json", result)

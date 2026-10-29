@@ -289,3 +289,37 @@ def test_invalid_config_and_cycles():
     node.children_ids.append("root")
     with pytest.raises(ValueError):
         SearchTree.model_validate_json(tree.model_dump_json())
+
+
+@pytest.mark.parametrize("algorithm", ["baseline", "best-of-n", "beam", "mcts"])
+async def test_dashboard_trace_contract(problem, tmp_path, algorithm):
+    cfg = settings(tmp_path)
+    cfg.budget.max_candidates = 8
+    runner = SearchOrchestrator(
+        problem, cfg, algorithm, FakeLLM({"default": ["bad"]}), Evaluator(ScriptExecutor())
+    )
+    result = await runner.run()
+    events = [
+        json.loads(line)
+        for line in (runner.events.directory / "events.jsonl").read_text().splitlines()
+    ]
+    assert all(e["schema_version"] == 2 for e in events)
+    assert [e["sequence"] for e in events] == list(range(1, len(events) + 1))
+    assert events[0]["root"]["node_id"] == "root"
+    assert (
+        next(e for e in events if e["event_type"] == "FINAL_SELECTED")["node_id"]
+        == result["selected_node_id"]
+    )
+    for created in (e for e in events if e["event_type"] == "NODE_CREATED"):
+        generated = next(
+            e
+            for e in events
+            if e["event_type"] == "CANDIDATE_GENERATED" and e["candidate_id"] == created["node_id"]
+        )
+        assert generated["sequence"] < created["sequence"]
+        assert generated["candidate"] == created["node"]["candidate"]
+    assert all(
+        e["worker_id"].startswith("worker-")
+        for e in events
+        if e["event_type"] == "SUBAGENT_STARTED"
+    )

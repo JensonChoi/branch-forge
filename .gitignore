@@ -7,3 +7,7 @@ __pycache__/
 dist/
 runs/
 .env
+node_modules/
+dashboard/test-results/
+dashboard/playwright-report/
+*.tsbuildinfo
