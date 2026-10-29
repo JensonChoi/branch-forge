@@ -123,10 +123,11 @@ class DockerExecutor:
                         while chunk := await stream.read(4096):
                             remaining = self.config.output_limit_bytes - len(buffers[index])
                             buffers[index].extend(chunk[:remaining])
-                            if len(chunk) > remaining:
+                            if len(chunk) > remaining and not overflow:
                                 overflow = True
-                                await self.command("kill", name)
-                                # Continue draining until EOF so the attach client cannot deadlock.
+                                # Docker may wait for its attach stream to drain before kill
+                                # completes. Keep both readers running while termination runs.
+                                group.create_task(self.command("kill", name))
 
                     async def feed() -> None:
                         assert process.stdin
@@ -151,10 +152,10 @@ class DockerExecutor:
                         status = "TIME_LIMIT_EXCEEDED"
                     finally:
                         if process.returncode is None:
-                            await self.command("kill", name)
                             with suppress(ProcessLookupError):
                                 process.kill()
                             await process.communicate()
+                            await self.command("kill", name)
                     rc, state, err = await self.command(
                         "inspect", "--format", "{{json .State}}", name
                     )
