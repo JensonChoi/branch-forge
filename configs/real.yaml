@@ -1,0 +1,11 @@
+llm:
+  provider: litellm
+  model: openai/gpt-4o-mini
+  max_output_tokens: 2048
+  max_concurrent_requests: 4
+budget:
+  max_tokens: null
+  max_cost_usd: null
+  max_llm_calls: 30
+  max_candidates: 30
+  max_wall_time_seconds: 300

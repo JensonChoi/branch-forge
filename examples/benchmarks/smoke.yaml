@@ -1,0 +1,25 @@
+{
+  "repeats": 1,
+  "problems": [
+    {
+      "problem": "examples/problems/max_subarray.yaml",
+      "hidden": "examples/hidden/max_subarray.yaml"
+    },
+    {
+      "problem": "examples/problems/balanced_parentheses.yaml",
+      "hidden": "examples/hidden/balanced_parentheses.yaml"
+    },
+    {
+      "problem": "examples/problems/two_sum.yaml",
+      "hidden": "examples/hidden/two_sum.yaml"
+    },
+    {
+      "problem": "examples/problems/shortest_path.yaml",
+      "hidden": "examples/hidden/shortest_path.yaml"
+    },
+    {
+      "problem": "examples/problems/coin_change.yaml",
+      "hidden": "examples/hidden/coin_change.yaml"
+    }
+  ]
+}

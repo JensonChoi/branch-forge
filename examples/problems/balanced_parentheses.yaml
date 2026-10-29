@@ -1,0 +1,18 @@
+{
+  "problem_id": "balanced_parentheses",
+  "title": "Balanced Parentheses",
+  "statement": "Determine whether a string of parentheses is balanced. Empty input is balanced.",
+  "input_format": "One line containing only parentheses",
+  "output_format": "YES or NO",
+  "constraints": "Input sizes up to 100000; coin-change target up to 10000. Integers fit signed 64-bit.",
+  "visible_tests": [
+    {
+      "input": "(())\n",
+      "expected_output": "YES\n"
+    },
+    {
+      "input": ")(\n",
+      "expected_output": "NO\n"
+    }
+  ]
+}

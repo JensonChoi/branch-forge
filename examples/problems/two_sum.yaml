@@ -1,0 +1,18 @@
+{
+  "problem_id": "two_sum",
+  "title": "Two Sum",
+  "statement": "Determine whether two distinct array positions sum to the target.",
+  "input_format": "n target, then n integers",
+  "output_format": "YES or NO",
+  "constraints": "Input sizes up to 100000; coin-change target up to 10000. Integers fit signed 64-bit.",
+  "visible_tests": [
+    {
+      "input": "4 9\n2 7 11 15\n",
+      "expected_output": "YES\n"
+    },
+    {
+      "input": "2 8\n3 4\n",
+      "expected_output": "NO\n"
+    }
+  ]
+}

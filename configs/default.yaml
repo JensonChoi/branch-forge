@@ -1,0 +1,12 @@
+llm:
+  provider: fake
+  max_output_tokens: 2048
+budget:
+  max_llm_calls: 60
+  max_candidates: 60
+  max_tokens: 300000
+  max_wall_time_seconds: 300
+agents:
+  max_concurrent: 4
+  max_candidates_per_task: 3
+  max_refinement_steps: 2

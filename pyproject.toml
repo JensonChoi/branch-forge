@@ -1,0 +1,24 @@
+[project]
+name = "branchforge"
+version = "0.1.0"
+description = "Explicit tree search for objectively evaluated LLM solutions"
+requires-python = ">=3.12"
+dependencies = ["pydantic>=2.10,<3", "typer>=0.15", "rich>=13", "PyYAML>=6", "litellm>=1.60"]
+[project.scripts]
+branchforge = "branchforge.cli:app"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.25", "ruff>=0.9", "mypy>=1.14", "types-PyYAML"]
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+markers = ["docker: requires a running Docker daemon and execution image"]
+[tool.ruff]
+line-length = 100
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+check_untyped_defs = true

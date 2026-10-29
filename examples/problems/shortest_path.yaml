@@ -1,0 +1,18 @@
+{
+  "problem_id": "shortest_path",
+  "title": "Unweighted Shortest Path",
+  "statement": "Find the number of edges in a shortest path from vertex 1 to vertex n in an undirected graph. Return -1 if unreachable.",
+  "input_format": "n m followed by m lines u v; vertices are 1-based",
+  "output_format": "Distance integer",
+  "constraints": "Input sizes up to 100000; coin-change target up to 10000. Integers fit signed 64-bit.",
+  "visible_tests": [
+    {
+      "input": "3 2\n1 2\n2 3\n",
+      "expected_output": "2\n"
+    },
+    {
+      "input": "3 1\n1 2\n",
+      "expected_output": "-1\n"
+    }
+  ]
+}

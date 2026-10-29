@@ -1,0 +1,10 @@
+[
+  {
+    "input": "\n",
+    "expected_output": "YES\n"
+  },
+  {
+    "input": "(()\n",
+    "expected_output": "NO\n"
+  }
+]
