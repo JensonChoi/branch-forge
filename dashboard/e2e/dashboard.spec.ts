@@ -17,6 +17,10 @@ test("inspect, replay, seek and view worker activity", async ({ page }) => {
   await expect(page.locator(".monaco-diff-editor")).toBeVisible({
     timeout: 15000,
   });
+  await page.screenshot({
+    path: "test-results/parent-diff.png",
+    fullPage: true,
+  });
   await page.getByRole("button", { name: "Parent diff", exact: true }).click();
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Pause", exact: true }).click();
@@ -31,10 +35,17 @@ test("inspect, replay, seek and view worker activity", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Worker activity" }),
   ).toBeVisible();
+  await page.getByLabel("Worker filter").selectOption("worker-0");
+  await page.screenshot({
+    path: "test-results/worker-timeline.png",
+    fullPage: true,
+  });
   await page.getByRole("button", { name: "analytics", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Search analytics" }),
   ).toBeVisible();
+  await expect(page.locator(".recharts-line-curve").first()).toBeVisible();
+  await page.screenshot({ path: "test-results/analytics.png", fullPage: true });
   await page.getByRole("button", { name: "tree", exact: true }).click();
   await page
     .getByRole("button", { name: "Final snapshot", exact: true })

@@ -52,3 +52,18 @@ pagination for larger directories. Full-tree overview can make individual nodes 
 500-candidate fixture; selecting a candidate centers and zooms the canvas. Monaco's lazy
 bundle is large, and Vite reports a chunk-size warning. Worker idle time and unrecorded legacy
 request activity remain unavailable. These limitations do not change recorded search results.
+
+## Review screenshots
+
+Screenshots captured by the Playwright acceptance flow:
+
+- [Tree and candidate inspector](screenshots/search-tree.png): a recorded fake-provider
+  beam run evaluated in Docker, with actual persisted candidates and rewards.
+- [Parent diff](screenshots/parent-diff.png): read-only diff for labeled synthetic data.
+- [Worker timeline](screenshots/worker-timeline.png): labeled synthetic fixture filtered
+  to a reused worker slot; peak concurrency is computed from eight overlapping task intervals.
+- [Analytics](screenshots/analytics.png): labeled 500-candidate/5,000-event synthetic fixture.
+
+These images illustrate visible behavior. Automated API/replay tests cover properties that
+cannot be established by screenshots alone, including filesystem restrictions and deterministic
+seeking. Browser tests use ports 5179 and 8019 to avoid the default local development servers.

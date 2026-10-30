@@ -629,7 +629,11 @@ function RunView({ id }: { id: string }) {
                   <XAxis dataKey="reward" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#69d5b1" />
+                  <Bar
+                    isAnimationActive={false}
+                    dataKey="count"
+                    fill="#69d5b1"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -640,7 +644,12 @@ function RunView({ id }: { id: string }) {
                   <XAxis dataKey={axis} />
                   <YAxis domain={[0, 1]} />
                   <Tooltip />
-                  <Line dataKey="best" stroke="#69d5b1" dot={false} />
+                  <Line
+                    isAnimationActive={false}
+                    dataKey="best"
+                    stroke="#69d5b1"
+                    dot={false}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -651,8 +660,18 @@ function RunView({ id }: { id: string }) {
                   <XAxis dataKey={axis} />
                   <YAxis />
                   <Tooltip />
-                  <Line dataKey="input" stroke="#79aaff" dot={false} />
-                  <Line dataKey="output" stroke="#c1a3ff" dot={false} />
+                  <Line
+                    isAnimationActive={false}
+                    dataKey="input"
+                    stroke="#79aaff"
+                    dot={false}
+                  />
+                  <Line
+                    isAnimationActive={false}
+                    dataKey="output"
+                    stroke="#c1a3ff"
+                    dot={false}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -670,7 +689,11 @@ function RunView({ id }: { id: string }) {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#79aaff" />
+                  <Bar
+                    isAnimationActive={false}
+                    dataKey="count"
+                    fill="#79aaff"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
