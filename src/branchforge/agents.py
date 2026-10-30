@@ -25,6 +25,7 @@ class CodingAgent:
         self.config, self.client, self.evaluator = config, client, evaluator
         self.budget, self.events = budget, events
         self.llm_slots = Limiter(config.llm.max_concurrent_requests)
+        self.worker_ids: dict[str, str] = {}
         self.results: dict[str, BranchResult] = {}
 
     async def explore(self, task: BranchTask) -> BranchResult:
@@ -32,7 +33,11 @@ class CodingAgent:
         result = BranchResult(task_id=task.task_id, parent_node_id=task.parent_node_id)
         self.results[task.task_id] = result
         history = list(task.history)
-        self.events.emit("SUBAGENT_STARTED", task_id=task.task_id, worker_id=task.task_id)
+        self.events.emit(
+            "SUBAGENT_STARTED",
+            task_id=task.task_id,
+            worker_id=self.worker_ids.get(task.task_id, task.task_id),
+        )
         try:
             async with asyncio.timeout(task.max_wall_time_seconds):
                 for step in range(task.max_candidates):
@@ -48,8 +53,18 @@ class CodingAgent:
                         )
                         try:
                             async with self.llm_slots:
+                                self.events.emit(
+                                    "LLM_STARTED", task_id=task.task_id, attempt=attempt
+                                )
                                 async with asyncio.timeout(self.config.llm.timeout_seconds):
                                     response = await self.client.generate(prompt, self.config.llm)
+                            self.events.emit(
+                                "LLM_FINISHED",
+                                task_id=task.task_id,
+                                input_tokens=response.input_tokens,
+                                output_tokens=response.output_tokens,
+                                cost_usd=response.cost_usd,
+                            )
                             self.budget.usage(
                                 task.task_id,
                                 response.input_tokens,
@@ -61,6 +76,7 @@ class CodingAgent:
                             generated = Generation.model_validate_json(response.content)
                             break
                         except (ValueError, TimeoutError, RuntimeError) as exc:
+                            self.events.emit("LLM_FAILED", task_id=task.task_id, error=str(exc))
                             if attempt == self.config.llm.retries:
                                 raise RuntimeError(f"Generation failed: {exc}") from exc
                     assert generated is not None
@@ -78,6 +94,13 @@ class CodingAgent:
                         "CANDIDATE_GENERATED",
                         task_id=task.task_id,
                         candidate_id=candidate.candidate_id,
+                        candidate=candidate.model_dump(mode="json"),
+                        parent_id=candidate.parent_candidate_id or "root",
+                    )
+                    self.events.emit(
+                        "EVALUATION_STARTED",
+                        task_id=task.task_id,
+                        candidate_id=candidate.candidate_id,
                     )
                     evaluation = await self.evaluator.evaluate(candidate, task.problem)
                     self.budget.evaluations += 1
@@ -87,6 +110,7 @@ class CodingAgent:
                         task_id=task.task_id,
                         candidate_id=candidate.candidate_id,
                         reward=evaluation.reward,
+                        evaluation=evaluation.model_dump(mode="json"),
                     )
                     history.append(HistoryEntry(candidate=candidate, evaluation=evaluation))
                     if evaluation.reward is None:
@@ -125,17 +149,18 @@ class BranchWorkerPool:
         for task in tasks:
             self.events.emit("BRANCH_TASK_QUEUED", task_id=task.task_id)
 
-        async def worker() -> None:
+        async def worker(slot: int) -> None:
             for task in iterator:
                 async with self.slots:
                     started = time.monotonic()
                     self.queue_waits.append(started - queued)
                     try:
+                        self.agent.worker_ids[task.task_id] = f"worker-{slot}"
                         await self.agent.explore(task)
                     finally:
                         self.active_seconds += time.monotonic() - started
 
         async with asyncio.TaskGroup() as group:
-            for _ in range(min(self.concurrency, len(tasks))):
-                group.create_task(worker())
+            for slot in range(min(self.concurrency, len(tasks))):
+                group.create_task(worker(slot))
         return [self.agent.results[t.task_id] for t in tasks]

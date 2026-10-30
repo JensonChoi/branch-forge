@@ -1,0 +1,383 @@
+@import "tailwindcss";
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #dce4ed;
+  background: #10151d;
+  color-scheme: dark;
+  font-size: 13px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+  background: #1b2532;
+  border: 1px solid #344052;
+  border-radius: 5px;
+  padding: 8px;
+  cursor: pointer;
+}
+button:hover,
+button.active {
+  background: #273b49;
+  border-color: #69d5b1;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #69d5b1;
+}
+header {
+  height: 62px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 0 24px;
+  border-bottom: 1px solid #2a3340;
+}
+header strong {
+  font-size: 20px;
+}
+small,
+.muted {
+  color: #93a3b7;
+}
+small {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.local {
+  margin-left: auto;
+  color: #69d5b1;
+}
+.shell {
+  display: flex;
+  min-height: calc(100vh - 62px);
+}
+aside {
+  width: 250px;
+  flex-shrink: 0;
+  padding: 18px;
+  border-right: 1px solid #2a3340;
+  overflow: auto;
+  max-height: calc(100vh - 62px);
+}
+aside input {
+  width: 100%;
+  margin-bottom: 18px;
+}
+.run {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 14px;
+}
+.run span,
+.run code {
+  font-size: 11px;
+  color: #93a3b7;
+}
+main {
+  flex: 1;
+  min-width: 0;
+}
+h1 {
+  font-size: 24px;
+  margin: 8px 0;
+}
+h2 {
+  font-size: 15px;
+}
+h3 {
+  font-size: 13px;
+}
+.title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 24px;
+}
+.badge {
+  border: 1px solid #3c6558;
+  border-radius: 20px;
+  padding: 6px 12px;
+  color: #69d5b1;
+}
+nav {
+  display: flex;
+  gap: 10px;
+  padding: 0 24px 16px;
+  align-items: center;
+}
+nav button {
+  text-transform: capitalize;
+}
+.warning {
+  margin: 0 24px 14px;
+  padding: 10px;
+  background: #332d20;
+  color: #e2c681;
+}
+.workspace {
+  display: flex;
+  height: 570px;
+  border-block: 1px solid #2a3340;
+}
+.canvas {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  background: #111923;
+}
+.canvas-tools {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+}
+.inspector {
+  width: 340px;
+  min-width: 240px;
+  max-width: 60%;
+  resize: horizontal;
+  overflow: auto;
+  padding: 20px;
+  background: #171e28;
+  border-left: 1px solid #2a3340;
+}
+.inspector code {
+  overflow-wrap: anywhere;
+}
+pre {
+  font-size: 11px;
+  line-height: 1.7;
+  background: #0d121a;
+  padding: 12px;
+  overflow: auto;
+  max-height: 370px;
+}
+.line-number {
+  display: inline-block;
+  width: 28px;
+  color: #64748b;
+  user-select: none;
+}
+.search-node {
+  width: 215px !important;
+  min-height: 105px;
+  text-align: left !important;
+  background: #1b2735 !important;
+  border: 1px solid #40536a !important;
+  color: #dce4ed !important;
+  padding: 12px !important;
+}
+.search-node small,
+.search-node b,
+.search-node span {
+  display: block;
+  margin: 4px 0;
+}
+.search-node small {
+  font-size: 9px;
+}
+.search-node span {
+  font-size: 10px;
+}
+.search-node.pruned {
+  opacity: 0.55;
+}
+.search-node.failed {
+  border-color: #d98181 !important;
+}
+.search-node.evaluating {
+  border-color: #e2b966 !important;
+}
+.search-node.final {
+  border: 2px solid #69d5b1 !important;
+}
+.search-node.ancestor {
+  box-shadow: 0 0 0 2px #69d5b144;
+}
+.react-flow__controls button {
+  background: #dce4ed;
+}
+.react-flow__minimap {
+  background: #1b2735 !important;
+}
+.overlay {
+  position: absolute;
+  top: 40%;
+  left: 20%;
+  color: #93a3b7;
+}
+footer {
+  padding: 18px 24px;
+}
+.playback {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.playback input {
+  flex: 1;
+  min-width: 30px;
+  accent-color: #69d5b1;
+}
+.metrics {
+  display: flex;
+  gap: 35px;
+  padding-top: 20px;
+}
+.metrics small,
+.metrics strong {
+  display: block;
+}
+.metrics strong {
+  margin-top: 8px;
+  font-size: 18px;
+}
+.panel {
+  padding: 20px 24px;
+  min-height: 570px;
+}
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.activities {
+  overflow: auto;
+  max-height: 460px;
+  margin-top: 15px;
+}
+.activity {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin: 8px 0;
+}
+.activity code {
+  width: 150px;
+  flex-shrink: 0;
+}
+.activity small {
+  display: block;
+}
+.track {
+  flex: 1;
+  min-width: 400px;
+  background: #1a2430;
+  height: 28px;
+}
+.track button {
+  background: #286350;
+  border: 0;
+  height: 27px;
+  min-width: 8px;
+  padding: 2px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.welcome {
+  max-width: 540px;
+  margin: 120px auto;
+  color: #93a3b7;
+}
+.welcome h1 {
+  color: #dce4ed;
+}
+@media (max-width: 1000px) {
+  aside {
+    width: 190px;
+  }
+  .inspector {
+    width: 270px;
+  }
+  .charts {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 750px) {
+  aside {
+    width: 140px;
+  }
+  .workspace {
+    flex-direction: column;
+    height: 800px;
+  }
+  .canvas {
+    min-height: 400px;
+  }
+  .inspector {
+    width: 100%;
+    max-width: 100%;
+    height: 350px;
+  }
+  .metrics {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  header .muted {
+    display: none;
+  }
+  .title,
+  nav {
+    padding: 12px;
+  }
+  nav {
+    flex-wrap: wrap;
+  }
+}
+
+.react-flow__controls button {
+  color: #182330;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #344052;
+}
+.inspector:fullscreen {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  padding: 30px;
+}
+
+.track button.llm {
+  background: #345c8a;
+}
+.track button.evaluation {
+  background: #82642b;
+}
+.track button.refinement {
+  background: #695185;
+}
+.track button.queued {
+  background: #4a5360;
+}
+.track button.failed {
+  background: #8b3f4c;
+}
+.track button.canceled {
+  background: #5d4a45;
+}

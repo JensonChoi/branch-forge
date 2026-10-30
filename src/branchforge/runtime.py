@@ -22,6 +22,7 @@ class Events:
     def emit(self, event_type: str, **metadata: Any) -> None:
         self.sequence += 1
         event = dict(
+            schema_version=2,
             run_id=self.run_id,
             timestamp=now().isoformat(),
             event_type=event_type,
