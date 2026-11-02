@@ -1,0 +1,43 @@
+stage: validation
+trials: 1
+seed: 42
+grader_image: branchforge-lcb:28fef95
+model_training_cutoff: '2025-08-31'
+input_usd_per_million: 0.75
+output_usd_per_million: 4.5
+# Set explicitly after reviewing experiment-plan and current provider pricing.
+spending_limit_usd: null
+search:
+  llm:
+    provider: litellm
+    model: openai/gpt-5.4-mini-2026-03-17
+    reasoning_effort: medium
+    temperature: null
+    max_output_tokens: 4096
+    max_prompt_chars: 32000
+    timeout_seconds: 120
+    retries: 0
+    max_concurrent_requests: 4
+  budget:
+    max_llm_calls: 8
+    max_candidates: 8
+    max_tokens: null
+    max_cost_usd: null
+    max_wall_time_seconds: 180
+  agents:
+    max_concurrent: 4
+    max_candidates_per_task: 2
+    max_refinement_steps: 1
+    max_llm_calls: 2
+    max_wall_time_seconds: 150
+  best_of_n: 8
+  beam_search:
+    beam_width: 2
+    branching_factor: 2
+    max_depth: 8
+    max_frontier_iterations: 4
+  mcts:
+    max_simulations: 8
+    branching_factor: 2
+    max_depth: 8
+  runs_dir: runs

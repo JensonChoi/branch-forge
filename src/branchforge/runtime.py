@@ -48,6 +48,9 @@ class Budget:
         self.started = time.monotonic()
         self.calls = self.candidates = self.input_tokens = self.output_tokens = 0
         self.evaluations = 0
+        self.logical_calls = self.retries = self.failed_requests = 0
+        self.reasoning_tokens = 0
+        self.reasoning_known = False
         self.cost_usd = 0.0
         self.cost_known = True
         self.reserved_calls = self.reserved_candidates = self.reserved_tokens = 0
@@ -137,6 +140,11 @@ class Budget:
     def summary(self) -> dict[str, Any]:
         return {
             "llm_calls": self.calls,
+            "physical_requests": self.calls,
+            "logical_generations": self.logical_calls,
+            "retry_requests": self.retries,
+            "failed_requests": self.failed_requests,
+            "reasoning_tokens": self.reasoning_tokens if self.reasoning_known else None,
             "candidates": self.candidates,
             "input_tokens": self.input_tokens,
             "output_tokens": self.output_tokens,

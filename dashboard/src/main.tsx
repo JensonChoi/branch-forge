@@ -36,6 +36,7 @@ import {
 import { Replay, type Event, type SearchNode } from "./replay";
 import "@xyflow/react/dist/style.css";
 import "./style.css";
+import { Experiments } from "./Experiments";
 const DiffEditor = lazy(() => import("./CodeDiff"));
 const CodeEditor = lazy(() =>
   import("./CodeDiff").then((m) => ({ default: m.Editor })),
@@ -94,6 +95,7 @@ function App() {
       </header>
       <div className="shell">
         <aside>
+          <a href="/experiments">Benchmark experiments</a>
           <h2>Run history</h2>
           <select
             aria-label="Sort runs"
@@ -165,7 +167,9 @@ function App() {
           )}
         </aside>
         <main>
-          {id ? (
+          {location.pathname === "/experiments" ? (
+            <Experiments />
+          ) : id ? (
             <RunView key={id} id={id} />
           ) : (
             <div className="welcome">

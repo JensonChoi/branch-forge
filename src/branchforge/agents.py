@@ -44,13 +44,16 @@ class CodingAgent:
                     if step:
                         self.events.emit("SUBAGENT_REFINEMENT_STARTED", task_id=task.task_id)
                     generated = None
+                    self.budget.logical_calls += 1
                     for attempt in range(self.config.llm.retries + 1):
                         prompt = messages(task, history, self.config.llm.max_prompt_chars)
                         await self.budget.consume_call(task.task_id)
                         result.llm_calls += 1
+                        self.budget.retries += int(attempt > 0)
                         self.events.emit(
                             "SUBAGENT_LLM_REQUESTED", task_id=task.task_id, attempt=attempt
                         )
+                        usage_recorded = False
                         try:
                             async with self.llm_slots:
                                 self.events.emit(
@@ -64,18 +67,33 @@ class CodingAgent:
                                 input_tokens=response.input_tokens,
                                 output_tokens=response.output_tokens,
                                 cost_usd=response.cost_usd,
+                                reasoning_tokens=response.reasoning_tokens,
+                                reported_model=response.reported_model,
+                                finish_reason=response.finish_reason,
+                                system_fingerprint=response.system_fingerprint,
                             )
+                            if response.reasoning_tokens is not None:
+                                self.budget.reasoning_known = True
+                                self.budget.reasoning_tokens += response.reasoning_tokens
                             self.budget.usage(
                                 task.task_id,
                                 response.input_tokens,
                                 response.output_tokens,
                                 response.cost_usd,
                             )
+                            usage_recorded = True
                             result.input_tokens += response.input_tokens
                             result.output_tokens += response.output_tokens
                             generated = Generation.model_validate_json(response.content)
                             break
+                        except asyncio.CancelledError:
+                            if self.config.llm.provider != "fake" and not usage_recorded:
+                                self.budget.cost_known = False
+                            raise
                         except (ValueError, TimeoutError, RuntimeError) as exc:
+                            self.budget.failed_requests += 1
+                            if self.config.llm.provider != "fake" and not usage_recorded:
+                                self.budget.cost_known = False
                             self.events.emit("LLM_FAILED", task_id=task.task_id, error=str(exc))
                             if attempt == self.config.llm.retries:
                                 raise RuntimeError(f"Generation failed: {exc}") from exc

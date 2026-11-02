@@ -323,3 +323,28 @@ async def test_dashboard_trace_contract(problem, tmp_path, algorithm):
         for e in events
         if e["event_type"] == "SUBAGENT_STARTED"
     )
+
+
+async def test_invalid_output_preserves_returned_usage_cost(problem, tmp_path):
+    class EmptyResponse:
+        async def generate(self, messages, config):
+            return GenerationResult(
+                content="",
+                input_tokens=20,
+                output_tokens=4096,
+                cost_usd=0.02,
+                reasoning_tokens=4096,
+            )
+
+    cfg = settings(tmp_path)
+    cfg.llm.provider = "litellm"
+    cfg.llm.retries = 0
+    cfg.budget.max_llm_calls = 1
+    search = SearchOrchestrator(
+        problem, cfg, "baseline", EmptyResponse(), Evaluator(ScriptExecutor())
+    )
+    result = await search.run()
+    assert result["candidate"] is None
+    assert result["budget"]["cost_usd"] == pytest.approx(0.02)
+    assert result["budget"]["output_tokens"] == 4096
+    assert result["budget"]["reasoning_tokens"] == 4096

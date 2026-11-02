@@ -19,6 +19,10 @@ class GenerationResult(BaseModel):
     input_tokens: int
     output_tokens: int
     cost_usd: float | None = None
+    reasoning_tokens: int | None = None
+    reported_model: str | None = None
+    system_fingerprint: str | None = None
+    finish_reason: str | None = None
 
 
 class LLMClient(Protocol):
@@ -29,7 +33,10 @@ class LLMClient(Protocol):
 
 def messages(task: BranchTask, history: list[HistoryEntry], limit: int) -> list[dict[str, str]]:
     problem = task.problem.model_dump_json()
-    base = "Return JSON with strategy, explanation, code. Write a Python stdin/stdout solution.\n"
+    base = (
+        "Return JSON with strategy, explanation, code. Write a Python solution following "
+        "the problem input_format and starter code.\n"
+    )
     base += problem + "\nOptional strategy: " + str(task.strategy_hint)
     if len(base) > limit:
         raise ValueError("Problem exceeds prompt size limit")
@@ -53,6 +60,8 @@ class LiteLLMClient:
             "timeout": config.timeout_seconds,
             "num_retries": 0,
         }
+        if config.reasoning_effort is not None:
+            kwargs["reasoning_effort"] = config.reasoning_effort
         if config.temperature is not None:
             kwargs["temperature"] = config.temperature
         try:
@@ -67,6 +76,12 @@ class LiteLLMClient:
         except Exception:  # noqa: BLE001 -- pricing is optional; unknown remains explicit
             cost = None
         return GenerationResult(
+            reasoning_tokens=getattr(
+                getattr(usage, "completion_tokens_details", None), "reasoning_tokens", None
+            ),
+            reported_model=getattr(response, "model", None),
+            finish_reason=getattr(response.choices[0], "finish_reason", None),
+            system_fingerprint=getattr(response, "system_fingerprint", None),
             cost_usd=cost,
             content=response.choices[0].message.content or "",
             input_tokens=usage.prompt_tokens,

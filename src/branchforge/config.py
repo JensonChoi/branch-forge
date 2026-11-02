@@ -14,6 +14,7 @@ class LLMConfig(Settings):
     max_output_tokens: int = Field(default=2048, gt=0)
     max_prompt_chars: int = Field(default=16000, ge=1000)
     temperature: float | None = None
+    reasoning_effort: str | None = None
     timeout_seconds: float = Field(default=60, gt=0)
     retries: int = Field(default=2, ge=0)
     max_concurrent_requests: int = Field(default=4, gt=0)

@@ -138,3 +138,10 @@ npm run test:e2e
 ```
 
 See [dashboard event compatibility](docs/dashboard.md) for recording semantics and limitations.
+
+## LiveCodeBench research pipeline
+
+See [the LiveCodeBench guide](docs/livecodebench.md) for pinned dataset/checker versions,
+manifest preparation, credential-free validation, spending-gated real experiments,
+reports, and the dashboard's `/experiments` view. No paid calls are required to test
+or preview the pipeline.
