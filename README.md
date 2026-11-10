@@ -145,3 +145,11 @@ See [the LiveCodeBench guide](docs/livecodebench.md) for pinned dataset/checker 
 manifest preparation, credential-free validation, spending-gated real experiments,
 reports, and the dashboard's `/experiments` view. No paid calls are required to test
 or preview the pipeline.
+
+### Local Claude Code / Codex integration
+
+The [local plugin guide](docs/local-plugin.md) covers installing a prepared wheel,
+registering the skills and stdio MCP server, provider credentials, bounded jobs, and
+the packaged dashboard. Developers prepare distributions with
+`python scripts/prepare_release.py` followed by `uv build`. Users with the installed
+runtime can run `branchforge demo` and `branchforge dashboard` without Node.

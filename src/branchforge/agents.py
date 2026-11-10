@@ -94,7 +94,13 @@ class CodingAgent:
                             self.budget.failed_requests += 1
                             if self.config.llm.provider != "fake" and not usage_recorded:
                                 self.budget.cost_known = False
-                            self.events.emit("LLM_FAILED", task_id=task.task_id, error=str(exc))
+                            self.events.emit(
+                                "LLM_FAILED",
+                                task_id=task.task_id,
+                                error=type(exc).__name__
+                                if self.config.llm.provider != "fake"
+                                else str(exc),
+                            )
                             if attempt == self.config.llm.retries:
                                 raise RuntimeError(f"Generation failed: {exc}") from exc
                     assert generated is not None
@@ -141,7 +147,7 @@ class CodingAgent:
             raise
         except Exception as exc:  # noqa: BLE001 -- worker failures are returned and persisted
             result.status = "FAILED"
-            result.error = str(exc)
+            result.error = type(exc).__name__ if self.config.llm.provider != "fake" else str(exc)
         finally:
             result.elapsed_seconds = time.monotonic() - started
             self.events.emit(

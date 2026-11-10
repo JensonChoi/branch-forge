@@ -12,3 +12,5 @@ dashboard/test-results/
 dashboard/playwright-report/
 *.tsbuildinfo
 .DS_Store
+
+src/branchforge/web/

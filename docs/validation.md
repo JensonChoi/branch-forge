@@ -64,3 +64,35 @@ Implemented on `feat/search-tree-dashboard`.
 Compatibility limits: detailed replay requires v2 event payloads. Older runs retain final
 inspection and recorded task intervals. Incomplete intervals do not contribute fabricated
 durations; idle time is unavailable. Live monitoring and hosted deployment remain out of scope.
+
+## Local MCP plugin integration (2026-11-10)
+
+- Python regression suite: 67 passed with Docker available; no Docker skips in the
+  unrestricted run. Ruff lint, formatting check and mypy passed.
+- New tests cover idempotent admission, ownership, immediate cancellation/shutdown,
+  interrupted discovery, path rejection, real stdio discovery/validation/cancel/reopen,
+  dashboard deep links/port conflicts, and provider exception secret exclusion.
+- Frontend: 6 unit tests and 3 Playwright browser tests passed; typecheck/build passed.
+  Existing Vite large-chunk warning remains. Python reports the existing Starlette
+  httpx deprecation warning.
+- `uv build` produced wheel and sdist, including compiled dashboard assets and demo.
+  Installed wheel in `/tmp/branchforge-wheel-check`, ran from `/tmp` without Node:
+
+```text
+branchforge demo --data-dir /tmp/branchforge-installed-demo
+run_id: c322c54cef3a430e843b08082b6ecd02
+state: completed
+termination_reason: SUCCESS
+selected_node_id: task-000001-c1
+visible_reward: 1.0
+llm_calls: 5; candidates: 5; cost_usd: 0.0 (fake provider)
+```
+
+- Codex CLI accepted the local marketplace and installed
+  `branchforge@branchforge-local`, version 0.1.0, into an isolated temporary profile.
+  This verifies registration, not an end-to-end host conversation. Claude Code was
+  unavailable; no Claude host acceptance is claimed. Four shared skills passed the
+  skill validator. Host bundles share the same skill content.
+- No paid model calls or public package/marketplace publication occurred. Runtime
+  validation used Docker and fake providers; initial sandbox-only runs skipped Docker
+  or could not bind sockets and were repeated successfully with required permissions.
