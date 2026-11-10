@@ -96,3 +96,15 @@ llm_calls: 5; candidates: 5; cost_usd: 0.0 (fake provider)
 - No paid model calls or public package/marketplace publication occurred. Runtime
   validation used Docker and fake providers; initial sandbox-only runs skipped Docker
   or could not bind sockets and were repeated successfully with required permissions.
+
+### Fresh-checkout CI correction
+
+The first PR checks failed during editable installation: unconditional Hatch
+`force-include` entries required the ignored `src/branchforge/web` directory even
+though the custom hook exempted editable builds from its own asset check. Local
+release preparation had masked that missing-directory case.
+
+Asset inclusion now lives in the release-only build hook. CI explicitly installs
+Node and prepares the dashboard before packaged-dashboard tests and distribution
+builds. Editable installation was checked in a clean tracked-file export using
+Python 3.12, and wheel/sdist inspection confirmed that release assets remain included.

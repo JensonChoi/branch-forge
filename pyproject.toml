@@ -50,9 +50,3 @@ packages = ["src/branchforge"]
 [tool.hatch.build.targets.sdist]
 include = ["src", "tests", "plugins", "scripts", "dashboard", "hatch_build.py", "pyproject.toml", "uv.lock", "README.md", "docs"]
 exclude = ["dashboard/node_modules", "dashboard/dist", "dashboard/test-results", "dashboard/playwright-report"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"src/branchforge/web" = "branchforge/web"
-
-[tool.hatch.build.targets.sdist.force-include]
-"src/branchforge/web" = "src/branchforge/web"
