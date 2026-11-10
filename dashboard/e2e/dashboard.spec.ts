@@ -88,3 +88,72 @@ test("replay a recorded local run when available", async ({
     fullPage: true,
   });
 });
+
+test("browse fixture experiment and navigate to replay", async ({ page }) => {
+  await page.route("**/api/experiments", (route) =>
+    route.fulfill({
+      json: {
+        data: [
+          {
+            experiment_id: "experiment-fixture",
+            summary: { stage: "validation" },
+          },
+        ],
+        warnings: [],
+      },
+    }),
+  );
+  await page.route("**/api/experiments/experiment-fixture", (route) =>
+    route.fulfill({
+      json: {
+        data: {
+          summary: {
+            fixture: true,
+            completed_trials: 1,
+            expected_trials: 1,
+            metrics: {
+              baseline: {
+                solved: 1,
+                trials: 1,
+                solve_rate: 1,
+                solve_ci95: [0.2, 1],
+                cost_per_solved: null,
+                recovery_rate: null,
+                recovery_opportunities: 0,
+              },
+            },
+          },
+          trials: [
+            {
+              problem_id: "fixture",
+              variant: "baseline",
+              run_id: "synthetic-dashboard",
+              grade: { passed: true, status: "PASS" },
+            },
+          ],
+        },
+        warnings: [],
+      },
+    }),
+  );
+  await page.goto("/experiments");
+  await page
+    .getByLabel("Experiment", { exact: true })
+    .selectOption("experiment-fixture");
+  await expect(
+    page.getByText("Fixture data — not model performance", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("cell", { name: "Unknown / undefined" }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: "test-results/experiment.png",
+    fullPage: true,
+  });
+  await page.getByRole("link", { name: "Open search tree" }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "SYNTHETIC · 500 candidate performance fixture",
+    }),
+  ).toBeVisible();
+});

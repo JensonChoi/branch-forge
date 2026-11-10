@@ -1,0 +1,13 @@
+{
+  "recorded_response_cost_usd": 14.128282500000001,
+  "conservative_accounted_cost_usd": 15.039598,
+  "requests_dispatched": 782,
+  "requests_with_usage": 775,
+  "note": "Usage-based cost, not invoice verification. Unreturned usage remains unknown. Full traces are local in ignored runs/experiment-primary/.",
+  "artifact_sha256": {
+    "summary.json": "b26e9ee51c5d3cc37e3208607b9b8b92ef3d04a433676e78cf1b1ef3ad93ac8d",
+    "manifest.json": "189b7a8daadb39d4097658ac1d9480e846f5e1be9db0e57cbfbbc3fbf813fe7e",
+    "per_problem_results.csv": "23667e66c85349c01fbf5a3e1f5316b42a056fd0cfc2ab63b4a22e8c5ec73f22"
+  },
+  "csv_note": "Line endings normalized to LF for Git; parsed data matches the generated CSV."
+}

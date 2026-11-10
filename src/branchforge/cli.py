@@ -111,3 +111,71 @@ def benchmark(
         console.print(report)
     except (ValueError, OSError) as exc:
         raise typer.BadParameter(str(exc)) from exc
+
+
+@app.command()
+def experiment_prepare(
+    cache: Path, manifest: Path, size: int = 100, seed: int = 42, download_data: bool = False
+) -> None:
+    """Create a deterministic public-only selection manifest from pinned JSONL files."""
+    from .experiments.dataset import DATASET_REVISION, RELEASE, download, load_public, select
+    from .experiments.runner import save
+
+    if download_data:
+        download(cache)
+    problems, hashes, exclusions = load_public(cache)
+    selected = select(problems, size, seed)
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    if manifest.exists():
+        raise typer.BadParameter("Manifest exists; choose a new path to preserve selection")
+    save(
+        manifest,
+        {
+            "dataset_revision": DATASET_REVISION,
+            "release": RELEASE,
+            "seed": seed,
+            "file_hashes": hashes,
+            "exclusions": exclusions,
+            "selection": "equal joint difficulty/source/month strata",
+            "problems": [p.model_dump(mode="json") for p in selected],
+        },
+    )
+    console.print(f"Saved {len(selected)} public problems to {manifest}")
+
+
+@app.command()
+def experiment_plan(config: Path) -> None:
+    """Show request and conservative spending ceilings without making API calls."""
+    from .experiments.runner import ExperimentConfig, preflight
+
+    settings = ExperimentConfig.model_validate(yaml.safe_load(config.read_text()))
+    console.print(preflight(settings, settings.problem_count))
+
+
+@app.command()
+def experiment_run(
+    config: Path, manifest: Path, cache: Path, output: Path, allow_paid: bool = False
+) -> None:
+    """Run or resume a frozen experiment; requires explicit paid execution opt-in."""
+    from .experiments.runner import ExperimentConfig, run
+
+    settings = ExperimentConfig.model_validate(yaml.safe_load(config.read_text()))
+    console.print(asyncio.run(run(settings, manifest, cache, output, allow_paid)))
+
+
+@app.command()
+def experiment_report(directory: Path) -> None:
+    """Regenerate Markdown, HTML, CSV and figures from recorded trials."""
+    from .experiments.report import generate
+
+    console.print(generate(directory))
+
+
+@app.command()
+def experiment_fixture(
+    output: Path = Path("runs/experiment-fixture"), runs_dir: Path = Path("runs")
+) -> None:
+    """Run a labeled fake-provider demonstration through the official Docker checker."""
+    from .experiments.fixture import fixture
+
+    console.print(asyncio.run(fixture(output, runs_dir)))

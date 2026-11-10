@@ -1,0 +1,965 @@
+{
+  "metrics": {
+    "baseline": {
+      "trials": 50,
+      "problems": 50,
+      "solved": 44,
+      "solve_rate": 0.88,
+      "solve_ci95": [
+        0.7619518261679701,
+        0.9438239984906773
+      ],
+      "unknown_grades": 1,
+      "visible_success_rate": 0.92,
+      "recovery_opportunities": 4,
+      "recovery_rate": 0.5,
+      "total_cost_usd": null,
+      "cost_per_solved": null,
+      "cost_per_attempt": null,
+      "failures": {
+        "PASS": 44,
+        "MEMORY_LIMIT_EXCEEDED": 1,
+        "FAIL": 3,
+        "NO_CANDIDATE": 2
+      },
+      "behavior": {
+        "max_depth": 1.28,
+        "frontier_count": 1.32,
+        "pruning_rate": 0.0,
+        "duplicate_candidates": 0.1,
+        "max_subagents": 1,
+        "average_active_subagents": 0.9681513538196785
+      },
+      "physical_requests": {
+        "mean": 1.32,
+        "median": 1.0,
+        "p95": 2.0
+      },
+      "logical_generations": {
+        "mean": 1.32,
+        "median": 1.0,
+        "p95": 2.0
+      },
+      "retry_requests": {
+        "mean": 0,
+        "median": 0.0,
+        "p95": 0.0
+      },
+      "failed_requests": {
+        "mean": 0.04,
+        "median": 0.0,
+        "p95": 0.0
+      },
+      "reasoning_tokens": null,
+      "llm_calls": {
+        "mean": 1.32,
+        "median": 1.0,
+        "p95": 2.0
+      },
+      "input_tokens": {
+        "mean": 1739.6,
+        "median": 663.0,
+        "p95": 2364.149999999997
+      },
+      "output_tokens": {
+        "mean": 4662.92,
+        "median": 1089.5,
+        "p95": 17620.55
+      },
+      "total_tokens": {
+        "mean": 6402.52,
+        "median": 1778.0,
+        "p95": 22708.049999999985
+      },
+      "candidates": {
+        "mean": 1.28,
+        "median": 1.0,
+        "p95": 2.0
+      },
+      "evaluations": {
+        "mean": 1.28,
+        "median": 1.0,
+        "p95": 2.0
+      },
+      "elapsed_seconds": {
+        "mean": 33.61021753165871,
+        "median": 7.654905687319115,
+        "p95": 124.70617312898393
+      },
+      "cost_usd": null
+    },
+    "beam-parallel": {
+      "trials": 50,
+      "problems": 50,
+      "solved": 45,
+      "solve_rate": 0.9,
+      "solve_ci95": [
+        0.7863976856252035,
+        0.9565242350681096
+      ],
+      "unknown_grades": 0,
+      "visible_success_rate": 0.9,
+      "recovery_opportunities": 6,
+      "recovery_rate": 0.3333333333333333,
+      "total_cost_usd": 2.6102419500000003,
+      "cost_per_solved": 0.05800537666666667,
+      "cost_per_attempt": 0.052204839,
+      "failures": {
+        "PASS": 45,
+        "FAIL": 4,
+        "NO_CANDIDATE": 1
+      },
+      "behavior": {
+        "max_depth": 1.2,
+        "frontier_count": 1.08,
+        "pruning_rate": 0.056666666666666664,
+        "duplicate_candidates": 0.04,
+        "max_subagents": 2,
+        "average_active_subagents": 1.7266175987579133
+      },
+      "physical_requests": {
+        "mean": 2.52,
+        "median": 2.0,
+        "p95": 7.549999999999997
+      },
+      "logical_generations": {
+        "mean": 2.52,
+        "median": 2.0,
+        "p95": 7.549999999999997
+      },
+      "retry_requests": {
+        "mean": 0,
+        "median": 0.0,
+        "p95": 0.0
+      },
+      "failed_requests": {
+        "mean": 0.06,
+        "median": 0.0,
+        "p95": 0.0
+      },
+      "reasoning_tokens": {
+        "mean": 9945.1,
+        "median": 1966.0,
+        "p95": 55664.44999999997
+      },
+      "llm_calls": {
+        "mean": 2.52,
+        "median": 2.0,
+        "p95": 7.549999999999997
+      },
+      "input_tokens": {
+        "mean": 2492.9,
+        "median": 1326.0,
+        "p95": 10396.449999999999
+      },
+      "output_tokens": {
+        "mean": 11267,
+        "median": 2926.5,
+        "p95": 58909.999999999956
+      },
+      "total_tokens": {
+        "mean": 13759.9,
+        "median": 4149.5,
+        "p95": 67490.84999999992
+      },
+      "candidates": {
+        "mean": 2.46,
+        "median": 2.0,
+        "p95": 7.099999999999994
+      },
+      "evaluations": {
+        "mean": 2.46,
+        "median": 2.0,
+        "p95": 7.099999999999994
+      },
+      "elapsed_seconds": {
+        "mean": 42.45214738667011,
+        "median": 11.164298604009673,
+        "p95": 208.33837758589047
+      },
+      "cost_usd": {
+        "mean": 0.052204839,
+        "median": 0.01422975,
+        "p95": 0.26967735749999977
+      }
+    },
+    "beam-sequential": {
+      "trials": 50,
+      "problems": 50,
+      "solved": 43,
+      "solve_rate": 0.86,
+      "solve_ci95": [
+        0.7381380628941446,
+        0.9304916657298371
+      ],
+      "unknown_grades": 1,
+      "visible_success_rate": 0.9,
+      "recovery_opportunities": 4,
+      "recovery_rate": 0.25,
+      "total_cost_usd": null,
+      "cost_per_solved": null,
+      "cost_per_attempt": null,
+      "failures": {
+        "PASS": 43,
+        "MEMORY_LIMIT_EXCEEDED": 1,
+        "FAIL": 4,
+        "NO_CANDIDATE": 2
+      },
+      "behavior": {
+        "max_depth": 1.18,
+        "frontier_count": 1.06,
+        "pruning_rate": 0.0619047619047619,
+        "duplicate_candidates": 0.04,
+        "max_subagents": 1,
+        "average_active_subagents": 0.9834343320244483
+      },
+      "physical_requests": {
+        "mean": 2.46,
+        "median": 2.0,
+        "p95": 5.749999999999986
+      },
+      "logical_generations": {
+        "mean": 2.48,
+        "median": 2.0,
+        "p95": 5.749999999999986
+      },
+      "retry_requests": {
+        "mean": 0,
+        "median": 0.0,
+        "p95": 0.0
+      },
+      "failed_requests": {
+        "mean": 0.12,
+        "median": 0.0,
+        "p95": 1.0
+      },
+      "reasoning_tokens": {
+        "mean": 8943.22,
+        "median": 1703.0,
+        "p95": 50000.0
+      },
+      "llm_calls": {
+        "mean": 2.46,
+        "median": 2.0,
+        "p95": 5.749999999999986
+      },
+      "input_tokens": {
+        "mean": 2350.02,
+        "median": 1326.0,
+        "p95": 7555.849999999982
+      },
+      "output_tokens": {
+        "mean": 10181.72,
+        "median": 2825.5,
+        "p95": 50000.0
+      },
+      "total_tokens": {
+        "mean": 12531.74,
+        "median": 4125.0,
+        "p95": 51915.5
+      },
+      "candidates": {
+        "mean": 2.34,
+        "median": 2.0,
+        "p95": 5.199999999999989
+      },
+      "evaluations": {
+        "mean": 2.34,
+        "median": 2.0,
+        "p95": 5.199999999999989
+      },
+      "elapsed_seconds": {
+        "mean": 67.87953466497362,
+        "median": 19.686337958090007,
+        "p95": 333.59235091048754
+      },
+      "cost_usd": null
+    },
+    "best-of-n": {
+      "trials": 50,
+      "problems": 50,
+      "solved": 45,
+      "solve_rate": 0.9,
+      "solve_ci95": [
+        0.7863976856252035,
+        0.9565242350681096
+      ],
+      "unknown_grades": 1,
+      "visible_success_rate": 0.94,
+      "recovery_opportunities": 4,
+      "recovery_rate": 0.5,
+      "total_cost_usd": null,
+      "cost_per_solved": null,
+      "cost_per_attempt": null,
+      "failures": {
+        "PASS": 45,
+        "MEMORY_LIMIT_EXCEEDED": 1,
+        "FAIL": 3,
+        "NO_CANDIDATE": 1
+      },
+      "behavior": {
+        "max_depth": 0.98,
+        "frontier_count": 1,
+        "pruning_rate": 0.0,
+        "duplicate_candidates": 1.02,
+        "max_subagents": 4,
+        "average_active_subagents": 3.35712067817121
+      },
+      "physical_requests": {
+        "mean": 8,
+        "median": 8.0,
+        "p95": 8.0
+      },
+      "logical_generations": {
+        "mean": 8,
+        "median": 8.0,
+        "p95": 8.0
+      },
+      "retry_requests": {
+        "mean": 0,
+        "median": 0.0,
+        "p95": 0.0
+      },
+      "failed_requests": {
+        "mean": 0.36,
+        "median": 0.0,
+        "p95": 2.0
+      },
+      "reasoning_tokens": {
+        "mean": 25599.68,
+        "median": 5666.0,
+        "p95": 117506.45
+      },
+      "llm_calls": {
+        "mean": 8,
+        "median": 8.0,
+        "p95": 8.0
+      },
+      "input_tokens": {
+        "mean": 5487.6,
+        "median": 5060.0,
+        "p95": 8539.199999999999
+      },
+      "output_tokens": {
+        "mean": 29258.3,
+        "median": 8742.0,
+        "p95": 126053.24999999999
+      },
+      "total_tokens": {
+        "mean": 34745.9,
+        "median": 14601.5,
+        "p95": 135951.34999999998
+      },
+      "candidates": {
+        "mean": 7.64,
+        "median": 8.0,
+        "p95": 8.0
+      },
+      "evaluations": {
+        "mean": 7.64,
+        "median": 8.0,
+        "p95": 8.0
+      },
+      "elapsed_seconds": {
+        "mean": 63.542448203265664,
+        "median": 22.055100353900343,
+        "p95": 267.82401522654084
+      },
+      "cost_usd": null
+    },
+    "mcts": {
+      "trials": 50,
+      "problems": 50,
+      "solved": 44,
+      "solve_rate": 0.88,
+      "solve_ci95": [
+        0.7619518261679701,
+        0.9438239984906773
+      ],
+      "unknown_grades": 0,
+      "visible_success_rate": 0.92,
+      "recovery_opportunities": 4,
+      "recovery_rate": 0.25,
+      "total_cost_usd": null,
+      "cost_per_solved": null,
+      "cost_per_attempt": null,
+      "failures": {
+        "PASS": 44,
+        "FAIL": 5,
+        "NO_CANDIDATE": 1
+      },
+      "behavior": {
+        "max_depth": 1.08,
+        "frontier_count": 1.38,
+        "pruning_rate": 0.0,
+        "duplicate_candidates": 0,
+        "max_subagents": 1,
+        "average_active_subagents": 0.9735172648911549
+      },
+      "physical_requests": {
+        "mean": 1.38,
+        "median": 1.0,
+        "p95": 3.6499999999999915
+      },
+      "logical_generations": {
+        "mean": 1.38,
+        "median": 1.0,
+        "p95": 3.6499999999999915
+      },
+      "retry_requests": {
+        "mean": 0,
+        "median": 0.0,
+        "p95": 0.0
+      },
+      "failed_requests": {
+        "mean": 0.04,
+        "median": 0.0,
+        "p95": 0.0
+      },
+      "reasoning_tokens": null,
+      "llm_calls": {
+        "mean": 1.38,
+        "median": 1.0,
+        "p95": 3.6499999999999915
+      },
+      "input_tokens": {
+        "mean": 1372.56,
+        "median": 632.5,
+        "p95": 6630.949999999977
+      },
+      "output_tokens": {
+        "mean": 5560.22,
+        "median": 1317.5,
+        "p95": 15691.29999999999
+      },
+      "total_tokens": {
+        "mean": 6932.78,
+        "median": 2200.0,
+        "p95": 16998.249999999993
+      },
+      "candidates": {
+        "mean": 1.34,
+        "median": 1.0,
+        "p95": 3.0999999999999943
+      },
+      "evaluations": {
+        "mean": 1.34,
+        "median": 1.0,
+        "p95": 3.0999999999999943
+      },
+      "elapsed_seconds": {
+        "mean": 35.38130700164474,
+        "median": 9.812860042089596,
+        "p95": 104.05258771448851
+      },
+      "cost_usd": null
+    }
+  },
+  "paired": [
+    {
+      "a": "baseline",
+      "b": "beam-parallel",
+      "paired_trials": 50,
+      "paired_problems": 50,
+      "difference": -0.02,
+      "ci95": [
+        -0.1,
+        0.04
+      ],
+      "counts": {
+        "both": 43,
+        "neither": 4,
+        "only_b": 2,
+        "only_a": 1
+      },
+      "resources": {
+        "elapsed_seconds": {
+          "paired_problems": 50,
+          "difference": -8.841929855011404,
+          "ci95": [
+            -26.668752039460465,
+            5.8150918805585095
+          ]
+        },
+        "total_tokens": {
+          "paired_problems": 50,
+          "difference": -7357.38,
+          "ci95": [
+            -13649.565,
+            -2724.793000000001
+          ]
+        },
+        "cost_usd": {
+          "paired_problems": 49,
+          "difference": -0.02762655612244898,
+          "ci95": [
+            -0.05044921905612246,
+            -0.010475690969387755
+          ]
+        }
+      }
+    },
+    {
+      "a": "baseline",
+      "b": "beam-sequential",
+      "paired_trials": 50,
+      "paired_problems": 50,
+      "difference": 0.02,
+      "ci95": [
+        -0.04,
+        0.08
+      ],
+      "counts": {
+        "both": 42,
+        "neither": 5,
+        "only_a": 2,
+        "only_b": 1
+      },
+      "resources": {
+        "elapsed_seconds": {
+          "paired_problems": 50,
+          "difference": -34.26931713331491,
+          "ci95": [
+            -58.965784175134026,
+            -14.973658268779523
+          ]
+        },
+        "total_tokens": {
+          "paired_problems": 50,
+          "difference": -6129.22,
+          "ci95": [
+            -10676.5915,
+            -2531.935500000001
+          ]
+        },
+        "cost_usd": {
+          "paired_problems": 48,
+          "difference": -0.018101015624999998,
+          "ci95": [
+            -0.030142482578125,
+            -0.007789901171875
+          ]
+        }
+      }
+    },
+    {
+      "a": "baseline",
+      "b": "best-of-n",
+      "paired_trials": 50,
+      "paired_problems": 50,
+      "difference": -0.02,
+      "ci95": [
+        -0.06,
+        0.0
+      ],
+      "counts": {
+        "both": 44,
+        "neither": 5,
+        "only_b": 1
+      },
+      "resources": {
+        "elapsed_seconds": {
+          "paired_problems": 50,
+          "difference": -29.93223067160696,
+          "ci95": [
+            -51.003930832126876,
+            -8.212433464380453
+          ]
+        },
+        "total_tokens": {
+          "paired_problems": 50,
+          "difference": -28343.38,
+          "ci95": [
+            -40217.917,
+            -17770.036500000002
+          ]
+        },
+        "cost_usd": {
+          "paired_problems": 47,
+          "difference": -0.10756268617021277,
+          "ci95": [
+            -0.15813637132978722,
+            -0.0620999763031915
+          ]
+        }
+      }
+    },
+    {
+      "a": "baseline",
+      "b": "mcts",
+      "paired_trials": 50,
+      "paired_problems": 50,
+      "difference": 0.0,
+      "ci95": [
+        -0.08,
+        0.08
+      ],
+      "counts": {
+        "both": 42,
+        "neither": 4,
+        "only_a": 2,
+        "only_b": 2
+      },
+      "resources": {
+        "elapsed_seconds": {
+          "paired_problems": 50,
+          "difference": -1.7710894699860364,
+          "ci95": [
+            -18.281966941439777,
+            10.87952412530826
+          ]
+        },
+        "total_tokens": {
+          "paired_problems": 50,
+          "difference": -530.26,
+          "ci95": [
+            -3973.024,
+            2122.4545
+          ]
+        },
+        "cost_usd": {
+          "paired_problems": 48,
+          "difference": -0.004911312499999998,
+          "ci95": [
+            -0.01745150453125,
+            0.002750162890625002
+          ]
+        }
+      }
+    },
+    {
+      "a": "beam-parallel",
+      "b": "beam-sequential",
+      "paired_trials": 50,
+      "paired_problems": 50,
+      "difference": 0.04,
+      "ci95": [
+        0.0,
+        0.1
+      ],
+      "counts": {
+        "both": 43,
+        "neither": 5,
+        "only_a": 2
+      },
+      "resources": {
+        "elapsed_seconds": {
+          "paired_problems": 50,
+          "difference": -25.427387278303502,
+          "ci95": [
+            -40.98200273153791,
+            -11.512382728146163
+          ]
+        },
+        "total_tokens": {
+          "paired_problems": 50,
+          "difference": 1228.16,
+          "ci95": [
+            -1142.6960000000001,
+            4556.430999999998
+          ]
+        },
+        "cost_usd": {
+          "paired_problems": 49,
+          "difference": 0.0030576857142857166,
+          "ci95": [
+            -0.006313979693877548,
+            0.016544029744897958
+          ]
+        }
+      }
+    },
+    {
+      "a": "beam-parallel",
+      "b": "best-of-n",
+      "paired_trials": 50,
+      "paired_problems": 50,
+      "difference": 0.0,
+      "ci95": [
+        -0.06,
+        0.06
+      ],
+      "counts": {
+        "both": 44,
+        "neither": 4,
+        "only_a": 1,
+        "only_b": 1
+      },
+      "resources": {
+        "elapsed_seconds": {
+          "paired_problems": 50,
+          "difference": -21.090300816595555,
+          "ci95": [
+            -40.13949508753256,
+            -2.105553684313782
+          ]
+        },
+        "total_tokens": {
+          "paired_problems": 50,
+          "difference": -20986,
+          "ci95": [
+            -29854.414500000003,
+            -13460.165500000012
+          ]
+        },
+        "cost_usd": {
+          "paired_problems": 48,
+          "difference": -0.086001859375,
+          "ci95": [
+            -0.12845373375000002,
+            -0.05013116234375003
+          ]
+        }
+      }
+    },
+    {
+      "a": "beam-parallel",
+      "b": "mcts",
+      "paired_trials": 50,
+      "paired_problems": 50,
+      "difference": 0.02,
+      "ci95": [
+        0.0,
+        0.06
+      ],
+      "counts": {
+        "both": 44,
+        "neither": 5,
+        "only_a": 1
+      },
+      "resources": {
+        "elapsed_seconds": {
+          "paired_problems": 50,
+          "difference": 7.070840385025367,
+          "ci95": [
+            -4.522331518213032,
+            22.63551666435459
+          ]
+        },
+        "total_tokens": {
+          "paired_problems": 50,
+          "difference": 6827.12,
+          "ci95": [
+            3191.2725,
+            11525.8635
+          ]
+        },
+        "cost_usd": {
+          "paired_problems": 49,
+          "difference": 0.02231597448979592,
+          "ci95": [
+            0.009478112219387758,
+            0.04008042015306122
+          ]
+        }
+      }
+    },
+    {
+      "a": "beam-sequential",
+      "b": "best-of-n",
+      "paired_trials": 50,
+      "paired_problems": 50,
+      "difference": -0.04,
+      "ci95": [
+        -0.1,
+        0.0
+      ],
+      "counts": {
+        "both": 43,
+        "neither": 5,
+        "only_b": 2
+      },
+      "resources": {
+        "elapsed_seconds": {
+          "paired_problems": 50,
+          "difference": 4.337086461707949,
+          "ci95": [
+            -14.925617753865895,
+            25.353079397972905
+          ]
+        },
+        "total_tokens": {
+          "paired_problems": 50,
+          "difference": -22214.16,
+          "ci95": [
+            -31020.8865,
+            -14595.670500000004
+          ]
+        },
+        "cost_usd": {
+          "paired_problems": 47,
+          "difference": -0.08862782234042554,
+          "ci95": [
+            -0.1285694554787234,
+            -0.05264003912234047
+          ]
+        }
+      }
+    },
+    {
+      "a": "beam-sequential",
+      "b": "mcts",
+      "paired_trials": 50,
+      "paired_problems": 50,
+      "difference": -0.02,
+      "ci95": [
+        -0.08,
+        0.04
+      ],
+      "counts": {
+        "both": 42,
+        "neither": 5,
+        "only_a": 1,
+        "only_b": 2
+      },
+      "resources": {
+        "elapsed_seconds": {
+          "paired_problems": 50,
+          "difference": 32.49822766332887,
+          "ci95": [
+            15.85623305105674,
+            52.0089607741942
+          ]
+        },
+        "total_tokens": {
+          "paired_problems": 50,
+          "difference": 5598.96,
+          "ci95": [
+            2899.5950000000003,
+            8712.0095
+          ]
+        },
+        "cost_usd": {
+          "paired_problems": 48,
+          "difference": 0.017241996875,
+          "ci95": [
+            0.00758625328125,
+            0.028381542109374967
+          ]
+        }
+      }
+    },
+    {
+      "a": "best-of-n",
+      "b": "mcts",
+      "paired_trials": 50,
+      "paired_problems": 50,
+      "difference": 0.02,
+      "ci95": [
+        -0.04,
+        0.08
+      ],
+      "counts": {
+        "both": 43,
+        "neither": 4,
+        "only_a": 2,
+        "only_b": 1
+      },
+      "resources": {
+        "elapsed_seconds": {
+          "paired_problems": 50,
+          "difference": 28.16114120162092,
+          "ci95": [
+            3.4529013097560965,
+            51.98098035167041
+          ]
+        },
+        "total_tokens": {
+          "paired_problems": 50,
+          "difference": 27813.12,
+          "ci95": [
+            17940.4735,
+            39746.4335
+          ]
+        },
+        "cost_usd": {
+          "paired_problems": 47,
+          "difference": 0.09642678191489362,
+          "ci95": [
+            0.057590043989361704,
+            0.14033360242021276
+          ]
+        }
+      }
+    }
+  ],
+  "difficulty": {
+    "easy": {
+      "baseline": {
+        "attempts": 13,
+        "solve_rate": 1
+      },
+      "best-of-n": {
+        "attempts": 13,
+        "solve_rate": 1
+      },
+      "beam-sequential": {
+        "attempts": 13,
+        "solve_rate": 1
+      },
+      "beam-parallel": {
+        "attempts": 13,
+        "solve_rate": 1
+      },
+      "mcts": {
+        "attempts": 13,
+        "solve_rate": 1
+      }
+    },
+    "hard": {
+      "baseline": {
+        "attempts": 19,
+        "solve_rate": 0.7368421052631579
+      },
+      "best-of-n": {
+        "attempts": 19,
+        "solve_rate": 0.7894736842105263
+      },
+      "beam-sequential": {
+        "attempts": 19,
+        "solve_rate": 0.7368421052631579
+      },
+      "beam-parallel": {
+        "attempts": 19,
+        "solve_rate": 0.8421052631578947
+      },
+      "mcts": {
+        "attempts": 19,
+        "solve_rate": 0.7894736842105263
+      }
+    },
+    "medium": {
+      "baseline": {
+        "attempts": 18,
+        "solve_rate": 0.9444444444444444
+      },
+      "best-of-n": {
+        "attempts": 18,
+        "solve_rate": 0.9444444444444444
+      },
+      "beam-sequential": {
+        "attempts": 18,
+        "solve_rate": 0.8888888888888888
+      },
+      "beam-parallel": {
+        "attempts": 18,
+        "solve_rate": 0.8888888888888888
+      },
+      "mcts": {
+        "attempts": 18,
+        "solve_rate": 0.8888888888888888
+      }
+    }
+  },
+  "stage": "primary",
+  "fixture": false,
+  "expected_trials": 250,
+  "completed_trials": 250,
+  "spending": {
+    "limit_usd": null,
+    "accounted_upper_cost_usd": 15.039598,
+    "exhausted": false,
+    "stop_reason": null,
+    "unresolved_requests": 7
+  }
+}

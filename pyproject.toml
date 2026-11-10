@@ -11,6 +11,8 @@ dependencies = [
     "litellm>=1.60",
     "fastapi>=0.162.0",
     "uvicorn>=0.54.0",
+    "matplotlib>=3.11.2",
+    "markdown>=3.7",
 ]
 [project.scripts]
 branchforge = "branchforge.cli:app"

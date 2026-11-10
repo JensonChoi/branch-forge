@@ -221,13 +221,37 @@ def create_app(runs_dir: Path | None = None) -> FastAPI:
     def health() -> dict:
         return {"status": "ok"}
 
+    @app.get("/api/experiments")
+    def experiments() -> Response:
+        items = []
+        for path in sorted(reader.root.glob("experiment-*")):
+            if not path.is_dir() or not path.resolve().is_relative_to(reader.root):
+                continue
+            warnings: list[str] = []
+            summary = reader.read(path.resolve(), "summary.json", warnings)
+            items.append({"experiment_id": path.name, "summary": summary, "warnings": warnings})
+        return Response(data=items)
+
+    @app.get("/api/experiments/{experiment_id}")
+    def experiment_detail(experiment_id: str) -> Response:
+        directory = reader.directory(experiment_id)
+        warnings: list[str] = []
+        return Response(
+            data={
+                "manifest": reader.read(directory, "manifest.json", warnings),
+                "summary": reader.read(directory, "summary.json", warnings),
+                "trials": reader.read(directory, "trials.json", warnings),
+            },
+            warnings=warnings,
+        )
+
     @app.get("/api/runs", response_model=Envelope[RunPage])
     def runs(offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=500)) -> Response:
         rows = []
         for path in sorted(reader.root.iterdir()) if reader.root.exists() else []:
             if (
                 path.is_dir()
-                and not path.name.startswith("benchmark-")
+                and not path.name.startswith(("benchmark-", "experiment-"))
                 and path.resolve().is_relative_to(reader.root)
             ):
                 warnings: list[str] = []

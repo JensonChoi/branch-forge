@@ -87,7 +87,7 @@ Use the lightweight code-generation dataset where appropriate, but document whet
 
 ### Problem Selection
 
-The primary experiment should use **100 distinct problems**.
+The primary experiment should use **50 distinct problems**.
 
 Select a stratified sample across:
 
@@ -123,7 +123,7 @@ If an uncontaminated subset cannot be established, explicitly describe the bench
 
 ## 4. Experiment Structure
 
-Implement three experiment stages.
+Implement two required experiment stages. The former pilot and primary stages are condensed into one 50-problem primary evaluation; a separate pilot is not required.
 
 ### Stage A — Integration Validation
 
@@ -144,9 +144,11 @@ This is a validation run, not the final research result.
 
 Synthetic or fake-provider tests should be run before any real-model API calls.
 
-### Stage B — Pilot Evaluation
+### Stage B — Primary Evaluation
 
-Run 50 problems across all five search configurations with a real LLM.
+Run the reproducible **50-problem manifest** across all five search configurations with a real LLM using a frozen experimental protocol.
+
+Before starting this stage, use Stage A and any targeted integration follow-ups to investigate implementation defects, parsing failures, infrastructure errors, model difficulty mismatch, and excessive costs. Freeze the model, reasoning effort, sampling settings, search policies, budgets, problem IDs, and statistical methods before inspecting primary results.
 
 Measure:
 
@@ -158,28 +160,13 @@ Measure:
 - Search failures.
 - Infrastructure errors.
 
-Use this stage to identify:
+Compare all five algorithms on the same 50 problem IDs with matched resource ceilings, and report actual resource consumption. One independent trial per configuration yields **250 primary trials**. Additional one-call baselines or repeated trials are supplementary and require an explicitly recorded protocol and spending allowance.
 
-- Implementation defects.
-- Excessive API costs.
-- Model difficulty mismatch.
-- Unreliable parsing.
-- Weak benchmark coverage.
-- Unnecessary search expansions.
+Use multiple independent trials where financially feasible. Fifty problems provide wider uncertainty intervals than 100, so small differences may remain inconclusive.
 
-After this stage, freeze the main experimental protocol.
+Do not change the evaluation configuration after inspecting primary results unless explicitly beginning a separately labeled follow-up experiment. Do not filter the primary manifest based on earlier success or failure. Disclose overlap with Stage A problems and any protocol tuning informed by earlier outcomes.
 
-### Stage C — Primary Evaluation
-
-Run the 100-problem manifest using the frozen configuration.
-
-Compare all five algorithms with matched resource budgets.
-
-Use multiple independent trials where financially feasible.
-
-Do not change the evaluation configuration after inspecting primary results unless explicitly beginning a separately labeled follow-up experiment.
-
-The final report must distinguish pilot observations from primary experimental findings.
+The final report must distinguish integration-validation and exploratory follow-up observations from primary experimental findings. There is no required separate Stage C or 50-problem pilot run.
 
 ---
 
@@ -282,7 +269,7 @@ dataset:
   name: livecodebench
   scenario: codegeneration
   release: pinned_release
-  sample_size: 100
+  sample_size: 50
   stratified: true
 
 model:
@@ -1105,12 +1092,6 @@ branchforge benchmark lcb validate \
 ```bash
 branchforge benchmark lcb run \
   --config configs/benchmarks/livecodebench.yaml \
-  --stage pilot
-```
-
-```bash
-branchforge benchmark lcb run \
-  --config configs/benchmarks/livecodebench.yaml \
   --stage primary
 ```
 
@@ -1144,7 +1125,7 @@ Before launching a paid batch, display:
 
 Require explicit confirmation for substantial paid experiments unless an intentional noninteractive flag is supplied.
 
-Never automatically launch the entire 100-problem evaluation merely because the feature was implemented.
+Never automatically launch the entire 50-problem primary evaluation merely because the feature was implemented.
 
 The implementation should make the full run easy to start, but should not spend substantial API credits without explicit authorization.
 
@@ -1253,15 +1234,13 @@ Add experiment browsing, algorithm comparisons, and links to detailed run replay
 
 Run unit tests, integration tests, official-grader compatibility tests, and deterministic full-pipeline tests.
 
-### Phase 8 — Real Model Pilot
+### Phase 8 — Real Model Integration Validation
 
-Once validated, run a small explicitly authorized real-model pilot.
-
-Investigate failures and refine the experimental setup before the primary evaluation.
+Run the explicitly authorized 20-problem Stage A integration validation. Use small, separately labeled follow-ups as needed to resolve integration defects, then freeze the primary protocol. A separate 50-problem pilot is not required.
 
 ### Phase 9 — Primary Experiment
 
-Execute the frozen 100-problem protocol when explicitly authorized.
+Execute the frozen 50-problem Stage B primary protocol across all five configurations when explicitly authorized.
 
 Generate the final report from the recorded results.
 
@@ -1273,7 +1252,7 @@ The milestone is complete when:
 
 - [ ] LiveCodeBench code-generation problems load correctly.
 - [ ] A stable dataset release is pinned.
-- [ ] The 100-problem manifest is reproducible.
+- [ ] The 50-problem primary manifest is reproducible.
 - [ ] All five algorithms are supported.
 - [ ] At least one real LLM provider works.
 - [ ] Search feedback and official grading are isolated.
@@ -1329,7 +1308,7 @@ After implementation, provide:
 3. Benchmark dataset and grader versions.
 4. Exact configuration for the selected real model.
 5. Commands to validate the integration.
-6. Commands to run the pilot.
+6. Commands to preflight the primary evaluation and review its spending limit.
 7. Commands to run the full primary benchmark.
 8. Commands to generate the report.
 9. Commands to view results in the dashboard.
