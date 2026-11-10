@@ -149,11 +149,7 @@ def experiment_plan(config: Path) -> None:
     from .experiments.runner import ExperimentConfig, preflight
 
     settings = ExperimentConfig.model_validate(yaml.safe_load(config.read_text()))
-    console.print(
-        preflight(
-            settings, {"smoke": 2, "validation": 20, "pilot": 50, "primary": 100}[settings.stage]
-        )
-    )
+    console.print(preflight(settings, settings.problem_count))
 
 
 @app.command()

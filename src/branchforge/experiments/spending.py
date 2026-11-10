@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from ..config import LLMConfig
-from ..llm import GenerationResult, LLMClient
+from ..llm import GenerationResult, LLMClient, ProviderCreditExhausted, generation_response_format
 
 
 class SpendLimitExceeded(RuntimeError):
@@ -16,10 +16,15 @@ class SpendLimitExceeded(RuntimeError):
 
 class SpendingClient:
     def __init__(
-        self, client: LLMClient, path: Path, limit: float, input_rate: float, output_rate: float
+        self,
+        client: LLMClient,
+        path: Path,
+        limit: float | None,
+        input_rate: float,
+        output_rate: float,
     ):
         self.client, self.path = client, path
-        self.limit = math.floor(limit * 1_000_000)
+        self.limit = math.floor(limit * 1_000_000) if limit is not None else None
         self.input_rate, self.output_rate = input_rate, output_rate
         self.lock = asyncio.Lock()
         self.state: dict[str, Any] = (
@@ -51,14 +56,19 @@ class SpendingClient:
 
     async def generate(self, messages: list[dict[str, str]], config: LLMConfig) -> GenerationResult:
         # Text-only requests: UTF-8 bytes upper-bound content tokens, plus framing allowance.
-        input_bound = len(json.dumps(messages, ensure_ascii=False).encode()) + 4096
+        input_bound = (
+            len(json.dumps(messages, ensure_ascii=False).encode())
+            + len(json.dumps(generation_response_format(), ensure_ascii=False).encode())
+            + 4096
+        )
         reserve = math.ceil(
             input_bound * self.input_rate + config.max_output_tokens * self.output_rate
         )
         async with self.lock:
             accounted = sum(r["accounted_micro_usd"] for r in self.state["requests"])
-            if self.exhausted or accounted + reserve > self.limit:
+            if self.exhausted or (self.limit is not None and accounted + reserve > self.limit):
                 self.state["exhausted"] = True
+                self.state.setdefault("stop_reason", "EXPERIMENT_SPENDING_LIMIT")
                 self.persist()
                 raise SpendLimitExceeded("EXPERIMENT_SPENDING_LIMIT")
             entry = {
@@ -70,7 +80,15 @@ class SpendingClient:
             self.state["requests"].append(entry)
             self.persist()  # Durable before any network dispatch, including on process crashes.
         # Errors/cancellation intentionally retain the maximum possible charge.
-        response = await self.client.generate(messages, config)
+        try:
+            response = await self.client.generate(messages, config)
+        except ProviderCreditExhausted:
+            async with self.lock:
+                self.state["exhausted"] = True
+                self.state["stop_reason"] = "API_CREDIT_EXHAUSTED"
+                entry["status"] = "credit_rejected"
+                self.persist()
+            raise
         usage_bound = math.ceil(
             response.input_tokens * self.input_rate + response.output_tokens * self.output_rate
         )

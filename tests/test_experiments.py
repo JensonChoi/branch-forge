@@ -101,13 +101,45 @@ def test_paired_clusters_keep_trials_together():
 def test_report_fixture_and_escaping(tmp_path):
     (tmp_path / "manifest.json").write_text(
         json.dumps(
-            {"stage": "validation", "fixture": True, "expected_trials": 1, "title": "<script>"}
+            {
+                "stage": "validation",
+                "fixture": True,
+                "expected_trials": 1,
+                "title": '<script>alert("x & y > z")</script>',
+            }
         )
     )
     (tmp_path / "trials.json").write_text(json.dumps([row()]))
     generate(tmp_path)
     assert "DETERMINISTIC FIXTURE" in (tmp_path / "report.md").read_text()
     assert "<script>" not in (tmp_path / "report.html").read_text()
+    from html.parser import HTMLParser
+
+    class CodeText(HTMLParser):
+        def __init__(self):
+            super().__init__(convert_charrefs=True)
+            self.inside = False
+            self.text = ""
+
+        def handle_starttag(self, tag, attrs):
+            if tag == "code":
+                self.inside = True
+
+        def handle_endtag(self, tag):
+            if tag == "code":
+                self.inside = False
+
+        def handle_data(self, data):
+            if self.inside:
+                self.text += data
+
+    parser = CodeText()
+    parser.feed((tmp_path / "report.html").read_text())
+    manifest_text = json.dumps(json.loads((tmp_path / "manifest.json").read_text()), indent=2)
+    assert manifest_text in parser.text
+    assert "&quot;" not in parser.text
+    assert "&lt;script&gt;" not in parser.text
+
     assert (tmp_path / "results.csv").exists()
     assert (tmp_path / "solve-rates.svg").exists()
 
@@ -310,3 +342,74 @@ def test_smoke_ceiling_fits_authorized_cap():
     assert estimate["trials"] == 12
     assert estimate["physical_request_ceiling"] == 22
     assert estimate["conservative_cost_ceiling_usd"] < 5
+
+
+def test_followup_has_explicit_unique_ids():
+    with pytest.raises(ValueError, match="distinct explicit"):
+        ExperimentConfig(stage="followup")
+    with pytest.raises(ValueError, match="distinct explicit"):
+        ExperimentConfig(stage="followup", followup_problem_ids=("a", "a"))
+    config = ExperimentConfig(
+        stage="followup",
+        followup_problem_ids=("a", "b"),
+        variants=("baseline",),
+        grader_memory_limit_mb=1024,
+    )
+    assert preflight(config, 2)["trials"] == 2
+
+
+async def test_grader_memory_override_is_confined_to_sandbox():
+    from branchforge.experiments.grading import OfficialGrader
+
+    class Executor:
+        async def run(self, code, stdin, sandbox):
+            assert sandbox.memory_limit_mb == 1024
+            return 'BRANCHFORGE_GRADE={"passed":false,"flags":[],"error_code":-2}', "", 0, None
+
+    p = problem().visible()
+    grade = await OfficialGrader(Executor(), memory_limit_mb=1024).grade("print(0)", p, None)
+    assert grade.passed is False
+    assert p.memory_limit_mb == 512
+
+
+def test_condensed_primary_protocol():
+    from pathlib import Path
+
+    import yaml
+
+    config = ExperimentConfig.model_validate(
+        yaml.safe_load(Path("configs/livecodebench-primary.yaml").read_text())
+    )
+    assert config.stage == "primary"
+    assert config.problem_count == 50
+    assert len(config.variants) == 5
+    assert preflight(config, config.problem_count)["trials"] == 250
+    assert config.spending_limit_usd is None
+
+
+def test_funding_amendment_preserves_research_protocol():
+    import copy
+
+    from branchforge.experiments.runner import fingerprint, validate_funding_amendment
+
+    original = {
+        "config": ExperimentConfig().model_dump(mode="json"),
+        "source_hash": "old",
+        "estimate": {"trials": 250, "spending_limit_usd": 12.86, "spending_mode": "per_request"},
+        "problem_ids": ["a"],
+        "selection_hash": "fixed",
+    }
+    current = copy.deepcopy(original)
+    current["config"].update(spending_mode="unlimited", spending_limit_usd=None)
+    current["estimate"].update(spending_mode="unlimited", spending_limit_usd=None)
+    current["source_hash"] = "new"
+    auth = {
+        "original_manifest_hash": fingerprint(original),
+        "authorized_config_hash": fingerprint(current["config"]),
+        "authorized_source_hash": "new",
+    }
+    validate_funding_amendment(original, current, auth)
+    current["config"]["search"]["llm"]["max_output_tokens"] = 50000
+    auth["authorized_config_hash"] = fingerprint(current["config"])
+    with pytest.raises(ValueError, match="research settings"):
+        validate_funding_amendment(original, current, auth)

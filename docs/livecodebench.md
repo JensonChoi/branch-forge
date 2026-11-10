@@ -17,7 +17,7 @@ Sources: [official repository](https://github.com/LiveCodeBench/LiveCodeBench), 
 
 ## Model and resources
 
-`configs/livecodebench.yaml` selects `openai/gpt-5.4-mini-2026-03-17` through LiteLLM, medium reasoning, temperature omitted, 4,096 maximum completion tokens, 32,000 prompt characters, four concurrent requests, 120-second request timeout, and zero retries by default. The documented knowledge cutoff is August 31, 2025. GPT-5 mini was the initial recommendation but current documentation marks it deprecated; the example uses GPT-5.4 mini instead. [Model documentation](https://developers.openai.com/api/docs/models/gpt-5.4-mini).
+`configs/livecodebench.yaml` selects `openai/gpt-5.4-mini-2026-03-17` through LiteLLM, medium reasoning, temperature omitted, 25,000 maximum completion tokens, 32,000 prompt characters, four concurrent requests, 120-second request timeout, and zero retries by default. The documented knowledge cutoff is August 31, 2025. GPT-5 mini was the initial recommendation but current documentation marks it deprecated; the example uses GPT-5.4 mini instead. [Model documentation](https://developers.openai.com/api/docs/models/gpt-5.4-mini).
 
 All five iterative configurations receive ceilings of eight physical requests (including any configured retries), eight candidates, and 180 seconds. Single-shot gets one request/candidate. Sequential and parallel beam differ only in worker concurrency. Best-of-N uses eight independent branches. Reasoning tokens, reported model identifiers and fingerprints are captured when returned by the provider; reasoning tokens are already included in output tokens and are not added twice.
 
@@ -55,7 +55,7 @@ uv run branchforge experiment-run configs/lcb-primary.yaml runs/lcb-manifest.jso
 uv run branchforge experiment-report runs/experiment-primary
 ```
 
-Validation uses the first 20 manifest entries, pilot 50, primary 100. The overlap is explicit; private diagnostics never reach agents. Only binary outcomes and sanitized error codes leave the private grader. Human tuning after viewing private outcomes can still bias a study and must be disclosed.
+Validation uses the first 20 manifest entries. Under the amended protocol, primary uses the first 50 entries; no separate pilot is required. The overlap is explicit; private diagnostics never reach agents. Only binary outcomes and sanitized error codes leave the private grader. Human tuning after viewing private outcomes can still bias a study and must be disclosed.
 
 Repeat the same run command to resume. A process lock prevents concurrent writers. Completed trials are skipped, and frozen selections are graded without regeneration. An interrupted search with a saved result is recovered; a hard crash without a result becomes an interrupted, unknown-grade attempt with unknown resource usage. It is never silently regenerated. Cancellation checkpoints the search and stops scheduling. Configuration, selection, source contents, commit, package versions, and grader image must match the frozen manifest. Use a new labeled experiment for protocol changes.
 
@@ -83,7 +83,7 @@ Open `http://localhost:5173/experiments`, choose an experiment, and follow its r
 
 ## Limits of the delivered evidence
 
-The 50-problem pilot and 100-problem primary experiments remain unexecuted. The completed reduced Stage A is recorded below. The two-problem smoke test validates connectivity and grading, not comparative algorithm quality. Output-token sizing, rate limits at scale, and model difficulty fit still need validation. There is no human-reviewed conceptual failure diagnosis: automatic reports expose runtime evidence and leave causal interpretation to review. Repeated seeds identify trials but do not guarantee deterministic provider sampling. Bootstrap intervals on very small samples can be degenerate. The checker has per-test timeouts and an outer container timeout; an outer timeout is an unknown infrastructure/censoring outcome, not a proven wrong answer.
+The amended 50-problem primary evaluation remains unexecuted. The completed reduced Stage A is recorded below. The two-problem smoke test validates connectivity and grading, not comparative algorithm quality. Output-token sizing, rate limits at scale, and model difficulty fit still need validation. There is no human-reviewed conceptual failure diagnosis: automatic reports expose runtime evidence and leave causal interpretation to review. Repeated seeds identify trials but do not guarantee deterministic provider sampling. Bootstrap intervals on very small samples can be degenerate. The checker has per-test timeouts and an outer container timeout; an outer timeout is an unknown infrastructure/censoring outcome, not a proven wrong answer.
 
 
 ## Authorized real-model smoke test
@@ -127,3 +127,69 @@ Results: 13 official passes, two official failures, four trials with no candidat
 The twenty baseline trials have $0.3609297 in recorded usage cost. Total Stage A costs including the earlier expanded comparison are $1.0698312 in returned-response usage, with $1.163984 conservatively accounted for after retaining reservations for two unresolved requests from the interrupted run. These are usage-based costs, not invoice verification, and exclude the prior $0.1159365 smoke test. The $5 cap was not reached.
 
 Execution and report generation completed before the conversation interruption. No Stage B or Stage C run was launched. Before progressing to the pilot, investigate output truncation, enforce the generation schema, and resolve the grader memory issue. This validation run is not evidence of comparative algorithm quality. The implementation and validation notes are maintained on `feat/livecodebench-report`.
+
+
+## Current completion allowance
+
+All `configs/livecodebench*.yaml` configurations now allow 25,000 completion tokens per request, with medium reasoning unchanged. Saved smoke and Stage A manifests retain their original 4,096/8,192-token protocols; results above refer to those historical settings. Future executions require a new experiment directory. Existing $5 limits remain in the smoke and validation configurations; per-request reservations include the higher completion ceiling. Historical whole-run cost ceilings above must be recalculated with `experiment-plan` for current settings. This configuration update does not execute paid requests or change grader memory.
+
+
+## Grader-memory and response-schema follow-up
+
+The frozen `abc362_c` submission was regraded without regeneration or model calls. At 512 MiB, Docker again reported an OOM kill. At 1,024 MiB, the official checker completed with `FAIL` (error code -2). A trivial `print(0)` control also OOM-killed at 512 MiB, demonstrating that the original submission's algorithm is not required to trigger the failure; checker/test-loading overhead contributes. The exact allocation responsible was not profiled. Use a 1 GiB grading container for this submission's follow-up; broader grading-memory policy remains a separate configuration decision.
+
+`runs/experiment-stage-a-reduced/memory-regrade.json` records the code hash, original run ID, memory limits, sanitized grading outcomes, and timings. The original Stage A report and its unknown grade remain unchanged; the follow-up resolves that submission to an official failure under the larger container limit. No private test diagnostics entered search contexts.
+
+The LiteLLM adapter now requests strict JSON Schema output with all three generation fields required on the wire: `strategy` is a string or null; `explanation` and `code` are strings; additional fields are forbidden. Local validation also rejects extra fields and coercions. Provider schema rejection remains an explicit error rather than silently falling back to unrestricted text. Truncated responses can still violate the schema; their returned token usage remains accounted for. The spending guard includes schema bytes when reserving request cost.
+
+Credential-free tests cover the exact outgoing schema, the previously observed list-valued strategy, unexpected fields, invalid code types, and retained usage for truncated output. Live provider schema adherence has not been retested with a paid request. See [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
+
+## Targeted 25,000-token follow-up
+
+`configs/livecodebench-truncation-followup.yaml` selects the five Stage A problems that previously exhausted their completion allowance. It uses baseline only, medium reasoning, strict JSON Schema, 25,000 completion tokens, a 1 GiB checker container, a 300-second request timeout, a 360-second per-task limit, and a 600-second trial limit. The follow-up has its own persistent $5 spending guard. Selection is outcome-based and exploratory; it is not a fresh random sample or an algorithm comparison.
+
+All five trials completed. `abc306_e`, `arc194_d`, and `3686` passed official grading, using 9,298, 16,482, and 10,146 completion tokens respectively. `3233` again exhausted the entire 25,000-token allowance on reasoning and returned no code. `abc350_e` returned eight schema-valid candidates, exhausted its candidate budget, and failed final grading. The user requested skipping that last problem, but the trial had already finished when the stop check ran; its actual completed outcome is retained.
+
+Twelve requests returned usage, with no unresolved requests. Recorded API cost was $0.59354985; the conservative ledger accounting was $0.609191, below the $5 cap. One response was truncated; the eleven complete responses passed schema validation. No checker-memory errors occurred. Trial latencies were approximately 47, 91, 51, 135, and 414 seconds. Higher completion limits reduce truncation on this selected set but do not guarantee output, correctness, or repair success. Model sampling, schema, timeout, and checker-memory settings differ from Stage A, so outcomes do not isolate a single causal change.
+
+Artifacts are under `runs/experiment-truncation-followup/`, including `manifest.json`, `spending.json`, `trials.json`, `report.md`, and `report.html`. Source changes add explicit follow-up IDs and an optional checker-memory override. Pre-run validation passed the existing 53-test suite and 12 experiment tests including the two new follow-up checks, plus Ruff and mypy. No Stage B run was launched.
+
+
+## Amended primary protocol: one 50-problem evaluation
+
+At the user's request, the required 50-problem pilot and 100-problem primary sequence is replaced by a single 50-problem primary evaluation. Use `configs/livecodebench-primary.yaml` with the first 50 IDs of the existing seed-42 manifest, chosen without filtering for previous outcomes. All five requested configurations run on the same IDs: single trajectory, best-of-N, sequential beam, parallel beam, and sequential MCTS. One repetition produces 250 trials. The extra single-shot comparison is omitted from this condensed evaluation.
+
+The model is `openai/gpt-5.4-mini-2026-03-17`, medium reasoning, 25,000 completion tokens, strict schema, and a 1 GiB checker. Search budgets, timeouts, and statistics follow the tested configuration. Freeze these settings before launching; any subsequent policy changes require a separately labeled follow-up. Fifty problems yield wider uncertainty intervals than 100, so small paired differences may remain inconclusive. The first 50 include previously used validation problems: disclose this overlap and human protocol tuning as a limitation. Do not describe them as an untouched holdout.
+
+Set an explicitly approved spending limit before execution. The supplied primary config leaves that limit unset and cannot launch paid requests until it is configured. `experiment-plan configs/livecodebench-primary.yaml` shows the schedule and conservative request ceiling. The legacy `pilot` stage remains available for optional diagnostics, but it is no longer a required step. Historical records and the original milestone prompt retain their original stage definitions.
+
+
+## LeetCode 3233 single-request 50,000-token diagnostic
+
+At the user's request, `configs/livecodebench-3233-50k.yaml` selects only `3233` for a separately labeled baseline diagnostic, with medium reasoning, strict schema, a 50,000-token completion allowance, no retries, one request/candidate, a 360-second request timeout, and a $0.30 per-request spending cap. Other primary settings remain unchanged.
+
+The single request returned after approximately 262.8 seconds with `finish_reason: length`: all 50,000 completion tokens were reasoning tokens, and no visible code was returned. There was no candidate to grade. Input usage was 1,005 tokens; recorded cost was $0.22575375, within the $0.30 cap. No retries or additional API requests were made. Artifacts are in `runs/experiment-3233-50k/`.
+
+This result does not establish that the model cannot solve the problem, but further automatic ceiling increases are not justified by this diagnostic. Keep the primary protocol's uniform 25,000-token limit and retain this problem's failure in evaluation rather than excluding it based on outcomes.
+
+The user accepted this decision: retain the uniform 25,000-token primary allowance, keep LeetCode 3233 in the existing 50-problem selection, and stop further higher-limit diagnostics for it. The 50,000-token configuration is a completed historical diagnostic, not a primary setting.
+
+
+## Authorized primary evaluation launch
+
+The user authorized up to $12.86 of API credit for the condensed primary evaluation. `configs/livecodebench-primary.yaml` now sets that cap with persistent per-request admission. The run uses the existing first 50 seed-42 problems, all five configurations, one repetition (250 planned trials), the pinned GPT-5.4 mini snapshot, medium reasoning, 25,000 completion tokens, strict schema, and a 1 GiB checker. No earlier trial outcomes are reused as primary results.
+
+Artifacts are checkpointed in `runs/experiment-primary/`: `primary-selection.json`, `manifest.json`, `source-snapshot.tar.gz`, `trials.json`, `summary.json`, `spending.json`, and `runner.log`. The runner generates HTML/Markdown reports on completion or a spending stop. `watch-status.json` records process status and observed cost; the local watcher attempts a desktop notification on credit exhaustion or process exit. This watcher makes no API calls and cannot send a new chat message while the assistant is idle.
+
+The adapter now classifies explicit provider credit/quota exhaustion and stops further scheduling via the shared ledger. Unknown charges retain their maximum reservation. Recorded returned-response cost can be lower than conservative ledger accounting; neither is invoice verification. Current official pricing was checked before launch. The initial credential-free checks passed 56 tests, Ruff, formatting, and mypy; the credit-stop addition passed nine targeted schema/spending tests and mypy.
+
+This section records launch, not completion. Consult `watch-status.json` and `summary.json` for the saved run state; incomplete results must remain labeled incomplete. Source and protocol changes are prohibited while this primary run is active.
+
+
+## Uncapped primary continuation
+
+After the primary runner stopped at 192/250 trials, the user added API credit and explicitly authorized removing the dollar cap to finish the remaining 58 trials. The primary config now uses `spending_mode: unlimited` and a null spending limit. Call/candidate/time budgets, model, reasoning effort, completion limit, problem IDs, all search policies, and grading settings remain frozen.
+
+`runs/experiment-primary/before-uncapped-resume/` preserves the original partial report, manifest, ledger, and trial records. `manifest.initial.json` retains the initial protocol, `resume-authorization.json` records the funding-only amendment and authorized source hash, and `source-snapshot-resume.tar.gz` records the administrative resume changes. The source audit compared against the launch snapshot and allowed changes only to runner funding/resume handling, spending accounting, and reporting. Every other Python source file remained identical. The resumed runner skips the 192 completed identities; it does not regenerate prior candidates or feed grading outcomes back to search.
+
+Unlimited mode continues durable request/usage accounting and stops further scheduling on explicit provider credit exhaustion, but has no dollar ceiling. Unresolved historical requests remain recorded conservatively. The ledger funding amendment clears only the prior spending-limit stop. The completion watcher follows the new process; final reports and CSV exports are regenerated when the resumed process ends. Validation passed 60 tests, Ruff, formatting, and mypy before restarting; no primary research settings were changed.

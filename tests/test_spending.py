@@ -72,3 +72,39 @@ def test_reduced_stage_schedule():
     assert preflight(config, 20)["physical_request_ceiling"] == 160
     with pytest.raises(ValueError):
         ExperimentConfig(variants=("baseline", "baseline"))
+
+
+async def test_credit_exhaustion_stops_future_requests(tmp_path):
+    from branchforge.llm import ProviderCreditExhausted
+
+    class Client:
+        calls = 0
+
+        async def generate(self, messages, config):
+            self.calls += 1
+            raise ProviderCreditExhausted("API_CREDIT_EXHAUSTED")
+
+    client = Client()
+    guarded = SpendingClient(client, tmp_path / "ledger.json", 1, 1, 1)
+    with pytest.raises(ProviderCreditExhausted):
+        await guarded.generate([], LLMConfig(max_output_tokens=1000))
+    with pytest.raises(SpendLimitExceeded):
+        await guarded.generate([], LLMConfig(max_output_tokens=1000))
+    assert client.calls == 1
+    assert guarded.state["stop_reason"] == "API_CREDIT_EXHAUSTED"
+
+
+async def test_unlimited_mode_retains_accounting(tmp_path):
+    class Client:
+        async def generate(self, messages, config):
+            return GenerationResult(
+                content="", input_tokens=1, output_tokens=1000, cost_usd=0.001001
+            )
+
+    guarded = SpendingClient(Client(), tmp_path / "ledger.json", None, 1, 1)
+    for _ in range(3):
+        await guarded.generate([], LLMConfig(max_output_tokens=1000))
+    assert guarded.state["limit_micro_usd"] is None
+    assert len(guarded.state["requests"]) == 3
+    assert sum(r["accounted_micro_usd"] for r in guarded.state["requests"]) == 3003
+    assert not guarded.exhausted

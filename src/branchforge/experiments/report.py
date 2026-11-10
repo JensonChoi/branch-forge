@@ -168,10 +168,13 @@ def generate(directory: Path) -> dict[str, Any]:
     if (directory / "spending.json").exists():
         ledger = json.loads((directory / "spending.json").read_text())
         summary["spending"] = {
-            "limit_usd": ledger["limit_micro_usd"] / 1e6,
+            "limit_usd": (
+                ledger["limit_micro_usd"] / 1e6 if ledger["limit_micro_usd"] is not None else None
+            ),
             "accounted_upper_cost_usd": sum(r["accounted_micro_usd"] for r in ledger["requests"])
             / 1e6,
             "exhausted": ledger["exhausted"],
+            "stop_reason": ledger.get("stop_reason"),
             "unresolved_requests": sum(r["status"] != "returned" for r in ledger["requests"]),
         }
     (directory / "summary.json").write_text(json.dumps(summary, indent=2))
@@ -326,10 +329,12 @@ def generate(directory: Path) -> dict[str, Any]:
     (directory / "report.md").write_text(markdown)
     import markdown as markdown_renderer
 
-    # Escape all input before rendering so generated code cannot introduce HTML.
-    rendered = markdown_renderer.markdown(
-        html.escape(markdown), extensions=["tables", "fenced_code"]
-    )
+    # Let code-block rendering escape its own content exactly once. Disable raw HTML
+    # interpretation so dataset/model text cannot become executable markup.
+    renderer = markdown_renderer.Markdown(extensions=["tables", "fenced_code"])
+    renderer.preprocessors.deregister("html_block")
+    renderer.inlinePatterns.deregister("html")
+    rendered = renderer.convert(markdown)
     (directory / "report.html").write_text(
         '<!doctype html><meta charset="utf-8"><title>BranchForge benchmark report</title>'
         "<style>body{max-width:1100px;margin:40px auto;padding:20px;font:16px/1.6 system-ui;color:#172333}"

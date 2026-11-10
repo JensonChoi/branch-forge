@@ -43,8 +43,9 @@ class Grade(BaseModel):
 
 
 class OfficialGrader:
-    def __init__(self, executor: DockerExecutor):
+    def __init__(self, executor: DockerExecutor, memory_limit_mb: int | None = None):
         self.executor = executor
+        self.memory_limit_mb = memory_limit_mb
 
     async def grade(
         self, code: str, problem: VisibleProblem, function: str | None, private: str | None = None
@@ -54,6 +55,8 @@ class OfficialGrader:
             {"code": code, "public": public, "private": private, "function": function}
         )
         sandbox = problem.model_copy(update={"time_limit_seconds": 600 if private else 90})
+        if self.memory_limit_mb is not None:
+            sandbox = sandbox.model_copy(update={"memory_limit_mb": self.memory_limit_mb})
         stdout, _, rc, status = await self.executor.run(DRIVER, payload, sandbox)
         if status or rc:
             return Grade(status=status or "GRADER_ERROR")

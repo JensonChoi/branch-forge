@@ -2,16 +2,30 @@ import asyncio
 import json
 from typing import Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from .config import LLMConfig
 from .models import BranchTask, HistoryEntry
 
 
 class Generation(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
     strategy: str | None = None
     explanation: str
     code: str
+
+
+def generation_response_format() -> dict:
+    """Strict provider schema; nullable strategy is explicitly required on the wire."""
+    schema = Generation.model_json_schema()
+    schema["required"] = list(schema["properties"])
+    for field in schema["properties"].values():
+        field.pop("default", None)
+    return {
+        "type": "json_schema",
+        "json_schema": {"name": "coding_generation", "strict": True, "schema": schema},
+    }
 
 
 class GenerationResult(BaseModel):
@@ -49,6 +63,10 @@ def messages(task: BranchTask, history: list[HistoryEntry], limit: int) -> list[
     return [{"role": "user", "content": base + tail}]
 
 
+class ProviderCreditExhausted(RuntimeError):
+    """The provider rejected a request because account credit/quota is exhausted."""
+
+
 class LiteLLMClient:
     async def generate(self, messages: list[dict[str, str]], config: LLMConfig) -> GenerationResult:
         import litellm
@@ -59,6 +77,7 @@ class LiteLLMClient:
             "max_tokens": config.max_output_tokens,
             "timeout": config.timeout_seconds,
             "num_retries": 0,
+            "response_format": generation_response_format(),
         }
         if config.reasoning_effort is not None:
             kwargs["reasoning_effort"] = config.reasoning_effort
@@ -66,7 +85,18 @@ class LiteLLMClient:
             kwargs["temperature"] = config.temperature
         try:
             response = await litellm.acompletion(**kwargs)
-        except litellm.exceptions.OpenAIError as exc:
+        except Exception as exc:
+            body = getattr(exc, "body", None)
+            details = body.get("error", body) if isinstance(body, dict) else {}
+            codes = {str(getattr(exc, "code", ""))}
+            if isinstance(details, dict):
+                codes.update(str(details.get(key, "")) for key in ("code", "type"))
+            if codes & {
+                "insufficient_quota",
+                "credit_balance_exhausted",
+                "billing_hard_limit_reached",
+            }:
+                raise ProviderCreditExhausted("API_CREDIT_EXHAUSTED") from None
             raise RuntimeError(f"Provider request failed: {type(exc).__name__}") from exc
         usage = response.usage
         if usage is None:

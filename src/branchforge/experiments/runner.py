@@ -14,7 +14,7 @@ from pydantic import Field, model_validator
 
 from ..config import Config, Settings
 from ..execution import DockerExecutor
-from ..llm import LiteLLMClient
+from ..llm import LiteLLMClient, generation_response_format
 from ..models import SearchTree, now
 from ..search import SearchOrchestrator
 from .dataset import DATASET_REVISION, GRADER_REVISION, RELEASE, Problem, private_row
@@ -37,7 +37,7 @@ VARIANTS: tuple[Variant, ...] = (
 
 class ExperimentConfig(Settings):
     search: Config = Field(default_factory=Config)
-    stage: Literal["smoke", "validation", "pilot", "primary"] = "validation"
+    stage: Literal["smoke", "validation", "pilot", "primary", "followup"] = "validation"
     trials: int = Field(default=1, ge=1)
     seed: int = 42
     grader_image: str = "branchforge-lcb:28fef95"
@@ -46,17 +46,32 @@ class ExperimentConfig(Settings):
     input_usd_per_million: float = Field(default=0.75, gt=0)
     output_usd_per_million: float = Field(default=4.5, gt=0)
     spending_limit_usd: float | None = Field(default=None, gt=0)
-    spending_mode: Literal["preflight", "per_request"] = "preflight"
+    spending_mode: Literal["preflight", "per_request", "unlimited"] = "preflight"
     variants: tuple[
         Literal["baseline", "best-of-n", "beam-sequential", "beam-parallel", "mcts", "single-shot"],
         ...,
     ] = VARIANTS
     spending_ledger_path: Path | None = None
+    followup_problem_ids: tuple[str, ...] = ()
+    grader_memory_limit_mb: int | None = Field(default=None, ge=32)
+
+    @property
+    def problem_count(self) -> int:
+        if self.stage == "followup":
+            return len(self.followup_problem_ids)
+        return {"smoke": 2, "validation": 20, "pilot": 50, "primary": 50}[self.stage]
 
     @model_validator(mode="after")
     def valid_variants(self) -> "ExperimentConfig":
+        if self.spending_mode == "unlimited" and self.spending_limit_usd is not None:
+            raise ValueError("Unlimited mode must not specify a spending ceiling")
         if not self.variants or len(set(self.variants)) != len(self.variants):
             raise ValueError("Variants must be nonempty and unique")
+        if self.stage == "followup" and (
+            not self.followup_problem_ids
+            or len(set(self.followup_problem_ids)) != len(self.followup_problem_ids)
+        ):
+            raise ValueError("Follow-up requires distinct explicit problem IDs")
         return self
 
 
@@ -81,7 +96,11 @@ def preflight(config: ExperimentConfig, count: int) -> dict[str, Any]:
         )
     )
     # UTF-8 bytes bound text tokens; allowance for chat framing. No tools/images used.
-    input_bound = 4 * config.search.llm.max_prompt_chars + 4096
+    input_bound = (
+        4 * config.search.llm.max_prompt_chars
+        + 4096
+        + len(json.dumps(generation_response_format(), ensure_ascii=False).encode())
+    )
     cost = (
         calls
         * (
@@ -101,6 +120,34 @@ def preflight(config: ExperimentConfig, count: int) -> dict[str, Any]:
     }
 
 
+def validate_funding_amendment(
+    original: dict[str, Any], current: dict[str, Any], authorization: dict[str, Any]
+) -> None:
+    """Permit a recorded funding change while retaining every research setting."""
+    if (
+        authorization.get("original_manifest_hash") != fingerprint(original)
+        or authorization.get("authorized_config_hash") != fingerprint(current["config"])
+        or authorization.get("authorized_source_hash") != current["source_hash"]
+    ):
+        raise ValueError("Resume authorization does not match the frozen experiment")
+    original_config = dict(original["config"])
+    current_config = dict(current["config"])
+    for key in ("spending_limit_usd", "spending_mode"):
+        original_config.pop(key, None)
+        current_config.pop(key, None)
+    if original_config != current_config:
+        raise ValueError("Funding amendment cannot change research settings")
+    for key, value in original.items():
+        if key not in {"config", "estimate", "source_hash"} and value != current.get(key):
+            raise ValueError(f"Funding amendment cannot change {key}")
+    old_estimate, new_estimate = dict(original["estimate"]), dict(current["estimate"])
+    for key in ("spending_limit_usd", "spending_mode"):
+        old_estimate.pop(key, None)
+        new_estimate.pop(key, None)
+    if old_estimate != new_estimate:
+        raise ValueError("Funding amendment cannot change resource estimates")
+
+
 async def _run(
     config: ExperimentConfig,
     manifest_path: Path,
@@ -111,8 +158,15 @@ async def _run(
     selection = json.loads(manifest_path.read_text())
     if selection["dataset_revision"] != DATASET_REVISION or selection["release"] != RELEASE:
         raise ValueError("Unsupported dataset pin")
-    stage_size = {"smoke": 2, "validation": 20, "pilot": 50, "primary": 100}[config.stage]
-    problems = [Problem.model_validate(p) for p in selection["problems"]][:stage_size]
+    if config.stage == "followup":
+        stage_size = config.problem_count
+        indexed = {p["question_id"]: p for p in selection["problems"]}
+        if any(key not in indexed for key in config.followup_problem_ids):
+            raise ValueError("Follow-up ID missing from manifest")
+        problems = [Problem.model_validate(indexed[key]) for key in config.followup_problem_ids]
+    else:
+        stage_size = config.problem_count
+        problems = [Problem.model_validate(p) for p in selection["problems"]][:stage_size]
     if len({p.question_id for p in problems}) != len(problems):
         raise ValueError("Manifest contains duplicate problem IDs")
     if len(problems) != stage_size:
@@ -124,8 +178,9 @@ async def _run(
     estimate = preflight(config, len(problems))
     if not allow_paid:
         raise ValueError("Paid execution requires --allow-paid after reviewing experiment-plan")
-    if config.spending_limit_usd is None or (
+    if (config.spending_limit_usd is None and config.spending_mode != "unlimited") or (
         config.spending_mode == "preflight"
+        and config.spending_limit_usd is not None
         and estimate["conservative_cost_ceiling_usd"] > config.spending_limit_usd
     ):
         raise ValueError("Conservative request ceiling exceeds configured spending limit")
@@ -186,8 +241,19 @@ async def _run(
     output.mkdir(parents=True, exist_ok=True)
     manifest_file = output / "manifest.json"
     if manifest_file.exists():
-        if json.loads(manifest_file.read_text()) != manifest:
-            raise ValueError("Resume protocol differs from frozen manifest; use a new experiment")
+        original_manifest = json.loads(manifest_file.read_text())
+        if original_manifest != manifest:
+            authorization_file = output / "resume-authorization.json"
+            if not authorization_file.exists():
+                raise ValueError(
+                    "Resume protocol differs from frozen manifest; use a new experiment"
+                )
+            validate_funding_amendment(
+                original_manifest, manifest, json.loads(authorization_file.read_text())
+            )
+            if not (output / "manifest.initial.json").exists():
+                save(output / "manifest.initial.json", original_manifest)
+            save(manifest_file, manifest)
     else:
         save(manifest_file, manifest)
     trials_file = output / "trials.json"
@@ -209,12 +275,15 @@ async def _run(
             config.input_usd_per_million,
             config.output_usd_per_million,
         )
-        if config.spending_mode == "per_request"
+        if config.spending_mode in {"per_request", "unlimited"}
         else None
     )
     if spending_client:
         save(output / "spending.json", spending_client.state)
-    grader = OfficialGrader(executor)
+    grader_options = (
+        {"memory_limit_mb": config.grader_memory_limit_mb} if config.grader_memory_limit_mb else {}
+    )
+    grader = OfficialGrader(executor, **grader_options)
     for trial in range(config.trials):
         for problem in problems:
             for variant in config.variants:
@@ -274,7 +343,8 @@ async def _run(
                                     config.search.execution.model_copy(
                                         update={"image": config.grader_image}
                                     )
-                                )
+                                ),
+                                **grader_options,
                             ),
                             problem.function_name,
                         )
@@ -377,7 +447,7 @@ async def run(
     output.mkdir(parents=True, exist_ok=True)
     with ExitStack() as stack:
         paths = [output / ".lock"]
-        if config.spending_mode == "per_request":
+        if config.spending_mode in {"per_request", "unlimited"}:
             paths.append(
                 (config.spending_ledger_path or output / "spending.json").with_suffix(".lock")
             )
