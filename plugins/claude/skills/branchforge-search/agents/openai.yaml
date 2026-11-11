@@ -1,0 +1,4 @@
+interface:
+  display_name: "BranchForge Search"
+  short_description: "Explore Python stdin/stdout solutions against visible tests using bounded BranchForge searches."
+  default_prompt: "Use $branchforge-search for this BranchForge task."

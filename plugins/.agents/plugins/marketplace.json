@@ -1,0 +1,5 @@
+{
+  "name": "branchforge-local",
+  "interface": {"displayName": "BranchForge Local"},
+  "plugins": [{"name": "branchforge", "source": {"source": "local", "path": "./codex"}, "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"}, "category": "Productivity"}]
+}

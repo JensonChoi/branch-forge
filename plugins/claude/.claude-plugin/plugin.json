@@ -1,0 +1,8 @@
+{
+  "name": "branchforge",
+  "version": "0.1.0",
+  "description": "Bounded local Python solution search",
+  "author": {
+    "name": "BranchForge"
+  }
+}

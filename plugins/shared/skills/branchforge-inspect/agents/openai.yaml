@@ -1,0 +1,4 @@
+interface:
+  display_name: "BranchForge Inspect"
+  short_description: "Inspect saved BranchForge runs, candidates and search history, or open their dashboard."
+  default_prompt: "Use $branchforge-inspect for this BranchForge task."

@@ -12,7 +12,8 @@ from rich.tree import Tree
 from .benchmark import benchmark as run_benchmark
 from .config import load_config
 from .models import CodingProblem, SearchTree
-from .search import POLICIES, SearchOrchestrator
+from .search import POLICIES
+from .service import create_search
 
 app = typer.Typer(no_args_is_help=True)
 console = Console()
@@ -40,7 +41,7 @@ def solve(
         if model:
             settings.llm.model = model
         visible = CodingProblem.model_validate(yaml.safe_load(problem.read_text())).visible()
-        orchestrator = SearchOrchestrator(visible, settings, algorithm)
+        orchestrator = create_search(visible, settings, algorithm)
 
         async def execute() -> dict:
             with Live(console=console, refresh_per_second=4) as live:
@@ -179,3 +180,61 @@ def experiment_fixture(
     from .experiments.fixture import fixture
 
     console.print(asyncio.run(fixture(output, runs_dir)))
+
+
+@app.command()
+def mcp(
+    data_dir: Path | None = None, max_active: int = 1, expected_version: str | None = None
+) -> None:
+    """Serve local MCP tools over stdio (diagnostics go to stderr)."""
+    from importlib.metadata import version
+
+    from .mcp_server import create_server
+
+    if expected_version and version("branchforge") != expected_version:
+        raise typer.BadParameter("Plugin/runtime version mismatch; install the matching wheel")
+    create_server(data_dir, max_active).run(transport="stdio")
+
+
+@app.command()
+def dashboard(data_dir: Path | None = None, port: int = 0) -> None:
+    """Serve packaged dashboard and read-only API on loopback."""
+    from .dashboard import Dashboard
+    from .service import data_root
+
+    async def serve() -> None:
+        ui = Dashboard(data_dir or data_root())
+        try:
+            console.print(await ui.start(port))
+            if ui.task:
+                await ui.task
+        finally:
+            await ui.close()
+
+    asyncio.run(serve())
+
+
+@app.command()
+def demo(data_dir: Path | None = None) -> None:
+    """Run the packaged fake-provider demo; Docker is still required."""
+    from importlib.resources import files
+
+    from .service import JobService, Submission
+
+    async def execute() -> None:
+        service = JobService(data_dir)
+        try:
+            request = Submission(
+                problem=json.loads(
+                    files("branchforge").joinpath("resources/demo.json").read_text()
+                ),
+                provider="fake",
+            )
+            result = await service.start(request)
+            run_id = result.data["run_id"]
+            await service.tasks[run_id]
+            console.print_json(service.status(run_id).model_dump_json())
+        finally:
+            await service.close()
+
+    asyncio.run(execute())

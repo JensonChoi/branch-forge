@@ -1,0 +1,4 @@
+interface:
+  display_name: "BranchForge Setup"
+  short_description: "Diagnose and configure the local BranchForge runtime and optionally run a fake-provider smoke test."
+  default_prompt: "Use $branchforge-setup for this BranchForge task."

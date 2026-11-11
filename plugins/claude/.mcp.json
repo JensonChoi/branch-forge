@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "branchforge": {
+      "command": "branchforge",
+      "args": [
+        "mcp", "--expected-version", "0.1.0"
+      ]
+    }
+  }
+}

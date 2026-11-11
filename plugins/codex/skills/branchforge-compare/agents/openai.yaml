@@ -1,0 +1,4 @@
+interface:
+  display_name: "BranchForge Compare"
+  short_description: "Compare saved BranchForge runs while accounting for problem, provider and budget differences."
+  default_prompt: "Use $branchforge-compare for this BranchForge task."

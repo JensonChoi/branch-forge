@@ -1,0 +1,9 @@
+{
+  "name": "branchforge",
+  "version": "0.1.0",
+  "description": "Bounded local Python solution search",
+  "author": {
+    "name": "BranchForge"
+  },
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
+}

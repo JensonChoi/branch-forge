@@ -292,7 +292,11 @@ class SearchOrchestrator:
         except asyncio.CancelledError:
             reason = "USER_CANCELED"
         except Exception as exc:  # noqa: BLE001 -- persist failed runs before returning
-            self.error = f"{type(exc).__name__}: {exc}"
+            self.error = (
+                type(exc).__name__
+                if self.config.llm.provider != "fake"
+                else f"{type(exc).__name__}: {exc}"
+            )
         finally:
             best = ranked(list(self.tree.nodes.values()))
             final = best[0] if best else None

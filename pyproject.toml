@@ -13,6 +13,8 @@ dependencies = [
     "uvicorn>=0.54.0",
     "matplotlib>=3.11.2",
     "markdown>=3.7",
+    "mcp>=1.26,<2",
+    "filelock>=3.32.7",
 ]
 [project.scripts]
 branchforge = "branchforge.cli:app"
@@ -39,3 +41,12 @@ line-length = 100
 python_version = "3.12"
 ignore_missing_imports = true
 check_untyped_defs = true
+
+[tool.hatch.build.hooks.custom]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/branchforge"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "plugins", "scripts", "dashboard", "hatch_build.py", "pyproject.toml", "uv.lock", "README.md", "docs"]
+exclude = ["dashboard/node_modules", "dashboard/dist", "dashboard/test-results", "dashboard/playwright-report"]
